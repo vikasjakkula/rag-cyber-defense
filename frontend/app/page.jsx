@@ -125,6 +125,13 @@ export default function Home() {
             </div>
           )}
 
+          {result.details && (
+            <div className="details">
+              <h2>Technical explanation</h2>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.details}</ReactMarkdown>
+            </div>
+          )}
+
           {result.not_found?.length > 0 && (
             <p className="note">Not in the dataset: {result.not_found.join(", ")}</p>
           )}
