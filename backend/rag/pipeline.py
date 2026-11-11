@@ -3,7 +3,9 @@
 The LLM only sees facts returned by Neo4j and is told to say when something is missing.
 """
 import json
+import queue
 import re
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from groq import Groq
@@ -107,22 +109,27 @@ def retrieve(question):
     return {"mode": "keyword_search", "ids": [], "facts": facts, "not_found": []}
 
 
+def chat(question, retrieved, system_prompt, stream=False):
+    """One Groq call with the facts as context."""
+    client = Groq(api_key=config.GROQ_API_KEY)
+    # Configurable thinking, and don't send the reasoning text back: smaller, faster response.
+    reasoning = ({"reasoning_effort": config.GROQ_REASONING_EFFORT, "include_reasoning": False}
+                 if config.GROQ_REASONING_EFFORT else {})
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"Question: {question}\n\nFacts:\n{json.dumps(retrieved, default=str)}"},
+    ]
+    return client.chat.completions.create(
+        model=config.GROQ_MODEL, temperature=0.1, messages=messages, stream=stream, **reasoning)
+
+
 def generate(question, retrieved, system_prompt=SYSTEM_PROMPT):
     """Returns (answer, llm_status). An LLM failure never hides the retrieved facts."""
     if not config.GROQ_API_KEY:
         return None, "not configured (set GROQ_API_KEY)"
     try:
-        client = Groq(api_key=config.GROQ_API_KEY)
-        # Configurable thinking, and don't send the reasoning text back: smaller, faster response.
-        reasoning = ({"reasoning_effort": config.GROQ_REASONING_EFFORT, "include_reasoning": False}
-                     if config.GROQ_REASONING_EFFORT else {})
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Question: {question}\n\nFacts:\n{json.dumps(retrieved, default=str)}"},
-        ]
         for _ in range(2):  # the model occasionally returns an empty message; retry once
-            response = client.chat.completions.create(
-                model=config.GROQ_MODEL, temperature=0.1, messages=messages, **reasoning)
+            response = chat(question, retrieved, system_prompt)
             text = (response.choices[0].message.content or "").strip()
             if text:
                 return text, config.GROQ_MODEL
@@ -142,3 +149,50 @@ def answer(question):
     if text and text.startswith(NO_ANSWER):  # the facts were unrelated, so there is nothing to explain
         details = None
     return {"question": question, "answer": text, "details": details, "llm": llm, **retrieved}
+
+
+def stream_text(question, retrieved, system_prompt):
+    """Yields the answer piece by piece as Groq writes it."""
+    for _ in range(2):  # retry once if the model sends nothing
+        sent = False
+        for chunk in chat(question, retrieved, system_prompt, stream=True):
+            piece = chunk.choices[0].delta.content if chunk.choices else None
+            if piece:
+                sent = True
+                yield piece
+        if sent:
+            return
+
+
+def answer_stream(question):
+    """Events for the typing effect: the facts first, then answer and details text as it arrives."""
+    retrieved = retrieve(question)
+    yield {"type": "facts", "question": question, **retrieved}
+    if not config.GROQ_API_KEY:
+        yield {"type": "done", "llm": "not configured (set GROQ_API_KEY)"}
+        return
+
+    # Both texts stream at once; a queue merges their pieces into one ordered event stream.
+    events = queue.Queue()
+
+    def pump(part, prompt):
+        try:
+            for piece in stream_text(question, retrieved, prompt):
+                events.put({"type": part, "delta": piece})
+        except Exception as exc:
+            events.put({"type": "error", "part": part, "detail": f"{config.GROQ_MODEL} failed: {exc}"})
+        finally:
+            events.put({"type": "end", "part": part})
+            events.put(None)
+
+    jobs = [("answer", SYSTEM_PROMPT)] + ([("details", DETAILS_PROMPT)] if retrieved["facts"] else [])
+    for part, prompt in jobs:
+        threading.Thread(target=pump, args=(part, prompt), daemon=True).start()
+    running = len(jobs)
+    while running:
+        event = events.get()
+        if event is None:
+            running -= 1
+        else:
+            yield event
+    yield {"type": "done", "llm": config.GROQ_MODEL}

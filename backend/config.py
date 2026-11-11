@@ -9,7 +9,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 # How much the model thinks before answering. gpt-oss accepts low/medium/high (low = fastest,
 # medium = better answers); qwen3 accepts none. Leave empty for models without reasoning.
-GROQ_REASONING_EFFORT = os.getenv("GROQ_REASONING_EFFORT", "medium")
+GROQ_REASONING_EFFORT = os.getenv("GROQ_REASONING_EFFORT", "low")
 
 # Browser origins allowed to call the API
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://graphcyrag.vercel.app,https://rag-cyber-defense-ox4x.vercel.app,http://localhost:3000").split(",")
