@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import AttackGraph from "./AttackGraph";
 import Backdrop from "./Backdrop";
 import Nav from "./Nav";
+import { loadHistory, saveEntry } from "./history";
 import { useHeadline, Words } from "./motion";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://rag-cyber-defense.vercel.app";
@@ -93,6 +94,16 @@ export default function Home() {
   const title = useRef(null);
   useHeadline(title);
 
+  // /?h=<id> reopens a saved answer from History without asking the AI again
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("h");
+    const saved = id && loadHistory().find((h) => String(h.id) === id);
+    if (saved) {
+      setQuestion(saved.question);
+      setResult({ ...saved, live: { answer: false, details: false } });
+    }
+  }, []);
+
   async function ask(q) {
     const text = (q ?? question).trim();
     if (!text) return;
@@ -120,17 +131,27 @@ export default function Home() {
         }
         throw new Error(detail);
       }
-      // One JSON event per line: the facts first, then answer and details text as the model writes it
+      // One JSON event per line: the facts first, then answer and details text as the model writes it.
+      // `entry` collects the whole result so it can be saved to history at the end.
+      let entry = null;
+      const show = () => setResult({ ...entry });
       const apply = (event) => {
         if (event.type === "facts") {
-          setResult({ ...event, answer: "", details: "", live: { answer: true, details: event.facts.length > 0 } });
+          const { type, ...facts } = event;
+          entry = { ...facts, id: Date.now(), at: new Date().toISOString(), answer: "", details: "",
+                    live: { answer: true, details: event.facts.length > 0 } };
+          show();
           window.dispatchEvent(new Event("graph:pulse")); // the particle graph reacts to the answer
         } else if (event.type === "answer" || event.type === "details") {
-          setResult((r) => ({ ...r, [event.type]: r[event.type] + event.delta }));
+          entry[event.type] += event.delta;
+          show();
         } else if (event.type === "end") {
-          setResult((r) => ({ ...r, live: { ...r.live, [event.part]: false } }));
+          entry.live = { ...entry.live, [event.part]: false };
+          show();
         } else if (event.type === "done") {
-          setResult((r) => ({ ...r, llm: event.llm, grounding: event.grounding }));
+          entry.llm = event.llm;
+          entry.grounding = event.grounding;
+          show();
         } else if (event.type === "error" && !event.part) {
           throw new Error(event.detail);
         }
@@ -146,7 +167,11 @@ export default function Home() {
         buffer = lines.pop();
         for (const line of lines) if (line.trim()) apply(JSON.parse(line));
       }
-      setResult((r) => r && { ...r, live: { answer: false, details: false } });
+      if (entry) {
+        entry.live = { answer: false, details: false };
+        show();
+        if (entry.answer) saveEntry(entry);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong while getting your answer. Please try again in a moment.";
       setError(message);

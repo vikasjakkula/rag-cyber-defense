@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 
-const PAGES = [["ask", "/", "Ask"], ["insights", "/insights", "Insights"], ["research", "/research", "Research"]];
+const PAGES = [
+  ["ask", "/", "Ask"], ["history", "/history", "History"],
+  ["insights", "/insights", "Insights"], ["research", "/research", "Research"],
+];
 
 export default function Nav({ current }) {
   return (
