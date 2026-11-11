@@ -63,6 +63,32 @@ side-by-side example answers.
 are not scored yet. GraphRAG answer time includes waits for the free Groq rate limit. Data covers
 2024 CVEs only.
 
+## 4. Fix-first score, tested on real attacks
+
+`backend/analytics/build.py` writes `frontend/public/analytics.json`, shown at `/insights`.
+
+Every CVE gets a score from 0 to 100:
+
+```
+Fix-first = 100 × (CVSS base score ÷ 10) × (exploitability ÷ 3.9) × (0.5 + 0.5 × reachable ATT&CK techniques ÷ 10)
+               how bad                      how easy                   how far an attacker can go
+```
+
+To test it, we use CISA's Known Exploited Vulnerabilities (KEV) list: bugs attackers really used.
+165 of our 2024 CVEs are on it. A good ranking puts them near the top.
+
+| Really exploited bugs found in the top 500 | |
+|---|---|
+| Our Fix-first score | 11 |
+| CVSS score alone | 6 |
+| Random order (expected) | 2.2 |
+
+So the graph's attack-path reach adds real signal: 5× random and 1.8× CVSS alone at the top 500.
+At the top 1,000 the two scores are close (15 vs 14), which we report as is.
+
+The Insights page also shows the bug-to-attacker coverage funnel, monthly CVE volume, severity, the
+most common weaknesses and the attacker goals (ATT&CK tactics) that 2024 bugs lead to.
+
 ## Run it yourself
 
 ```bash
@@ -70,4 +96,5 @@ cd backend
 python -m eval.build_benchmark 10      # 10 questions per type (skip to reuse the saved file)
 python -m eval.run_eval                # asks both systems, about 10 minutes on the free Groq tier
 python -m eval.run_eval --rescore      # re-mark saved answers after changing the scoring
+python -m analytics.build              # Insights page numbers and the Fix-first test
 ```

@@ -67,7 +67,6 @@ function startGradient(canvas) {
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const res = gl.getUniformLocation(prog, "r");
   const time = gl.getUniformLocation(prog, "t");
-  canvas.style.opacity = "1";
   return (t) => {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.uniform2f(res, canvas.width, canvas.height);
@@ -94,7 +93,58 @@ function layout(w, h) {
     const x = Math.random() * band * 1.1;
     return { x: right ? w - x : x, y: Math.random() * h, speed: 6 + Math.random() * 14, size: 0.6 + Math.random() * 1.6 };
   });
-  return { band, chains, dust };
+  const blips = Array.from({ length: 34 }, () => ({ x: Math.random() * w, y: Math.random() * h }));
+  return { band, chains, dust, blips };
+}
+
+// "Blueprint" template: drafting-paper grid with a radar sweep that lights up detected points
+function drawBlueprint(ctx, w, h, t, blips) {
+  ctx.fillStyle = "#f5f7fc";
+  ctx.fillRect(0, 0, w, h);
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= w; x += 44) {
+    ctx.strokeStyle = x % 220 === 0 ? "rgba(59,91,219,0.13)" : "rgba(59,91,219,0.06)";
+    ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); ctx.stroke();
+  }
+  for (let y = 0; y <= h; y += 44) {
+    ctx.strokeStyle = y % 220 === 0 ? "rgba(59,91,219,0.13)" : "rgba(59,91,219,0.06)";
+    ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); ctx.stroke();
+  }
+  const cx = w / 2, cy = h + 60, R = Math.hypot(w / 2, h + 60);
+  ctx.strokeStyle = "rgba(59,91,219,0.09)";
+  for (let r = 180; r < R; r += 180) { ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI); ctx.stroke(); }
+  const sweep = Math.PI + ((t * 0.32) % 1) * Math.PI; // left to right across the top half
+  if (ctx.createConicGradient) {
+    const g = ctx.createConicGradient(sweep - 0.5, cx, cy);
+    g.addColorStop(0, "rgba(79,70,229,0)");
+    g.addColorStop(0.079, "rgba(79,70,229,0.08)");
+    g.addColorStop(0.08, "rgba(79,70,229,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, sweep - 0.5, sweep); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = "rgba(79,70,229,0.35)";
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(sweep) * R, cy + Math.sin(sweep) * R); ctx.stroke();
+  // Points glow right after the beam passes, then fade
+  for (const b of blips) {
+    const a = Math.atan2(b.y - cy, b.x - cx);
+    const since = (sweep - (a < 0 ? a + 2 * Math.PI : a) + 2 * Math.PI) % (2 * Math.PI);
+    const glow = since < 1.2 ? 1 - since / 1.2 : 0;
+    ctx.globalAlpha = 0.15 + glow * 0.75;
+    ctx.fillStyle = "#4f46e5";
+    ctx.beginPath(); ctx.arc(b.x, b.y, 2 + glow * 2.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+export const BACKGROUNDS = ["blueprint", "aurora"];
+
+export function savedBackground() {
+  try {
+    const v = localStorage.getItem("bg");
+    return BACKGROUNDS.includes(v) ? v : BACKGROUNDS[0];
+  } catch {
+    return BACKGROUNDS[0];
+  }
 }
 
 export default function Backdrop() {
@@ -108,6 +158,12 @@ export default function Backdrop() {
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const drawGradient = startGradient(bg);
     const pointer = { x: -9999, y: -9999 };
+    const mode = { bg: savedBackground() };
+    const apply = () => {
+      document.documentElement.dataset.bg = mode.bg;
+      bg.style.opacity = mode.bg === "aurora" && drawGradient ? "1" : "0";
+    };
+    const onBg = (e) => { mode.bg = e.detail; apply(); if (still) tick(8000); };
     let w = 0, h = 0, dpr = 1, scene = null, frame = 0;
 
     function resize() {
@@ -134,11 +190,13 @@ export default function Backdrop() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       ctx.globalAlpha = 1;
+      const light = mode.bg === "blueprint";
+      if (light) drawBlueprint(ctx, w, h, t, scene.blips);
 
       for (const d of scene.dust) {
         const y = (((d.y - t * d.speed) % h) + h) % h;
-        ctx.globalAlpha = edgeFade(d.x) * 0.55 * (small ? 0.5 : 1);
-        ctx.fillStyle = "#ffffff";
+        ctx.globalAlpha = edgeFade(d.x) * (light ? 0.3 : 0.55) * (small ? 0.5 : 1);
+        ctx.fillStyle = light ? "#4f46e5" : "#ffffff";
         ctx.beginPath();
         ctx.arc(d.x + Math.sin(t * 0.5 + y * 0.02) * 6, y, d.size, 0, Math.PI * 2);
         ctx.fill();
@@ -158,7 +216,7 @@ export default function Backdrop() {
 
         // Links of the attack path
         ctx.globalAlpha = 0.55 * fade;
-        ctx.strokeStyle = "rgba(255,255,255,0.9)";
+        ctx.strokeStyle = light ? "rgba(59,91,219,0.75)" : "rgba(255,255,255,0.9)";
         ctx.lineWidth = 1.3;
         ctx.setLineDash([4, 5]);
         ctx.lineDashOffset = -t * 18;
@@ -209,7 +267,7 @@ export default function Backdrop() {
           const tw = ctx.measureText(p.id).width;
           const lx = p.right ? p.x - r - 10 - tw - 12 : p.x + r + 10;
           ctx.globalAlpha = fade * (0.72 + lit * 0.28);
-          ctx.fillStyle = "rgba(255,255,255,0.78)";
+          ctx.fillStyle = light ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.78)";
           ctx.beginPath();
           ctx.roundRect(lx, p.y - 10, tw + 12, 20, 10);
           ctx.fill();
@@ -221,7 +279,7 @@ export default function Backdrop() {
 
     function tick(now) {
       const t = now / 1000;
-      drawGradient?.(t);
+      if (mode.bg === "aurora") drawGradient?.(t);
       drawGraph(t);
       if (!still) frame = requestAnimationFrame(tick);
     }
@@ -229,12 +287,15 @@ export default function Backdrop() {
     const onMove = (e) => { pointer.x = e.clientX; pointer.y = e.clientY; };
     const onLeave = () => { pointer.x = pointer.y = -9999; };
     resize();
+    apply();
+    window.addEventListener("bgchange", onBg);
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", onMove);
     document.addEventListener("pointerleave", onLeave);
     frame = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(frame);
+      window.removeEventListener("bgchange", onBg);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerleave", onLeave);
