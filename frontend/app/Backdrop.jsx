@@ -178,7 +178,10 @@ export default function Backdrop({ shape = "sphere" }) {
 
   return (
     <div className="backdrop" aria-hidden="true">
-      <div className="backdrop-glow" />
+      <div className="backdrop-glow">
+        <span className="blob b1" /><span className="blob b2" /><span className="blob b3" />
+        <span className="blob b4" /><span className="blob b5" />
+      </div>
       <div ref={mount} className="backdrop-gl" />
     </div>
   );

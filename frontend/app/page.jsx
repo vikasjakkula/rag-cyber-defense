@@ -96,6 +96,7 @@ export default function Home() {
   useHeadline(title);
 
   const [recent, setRecent] = useState([]);
+  const [drawer, setDrawer] = useState(false);
 
   // Show a saved answer straight from this browser's storage, without asking the AI again
   function open(saved) {
@@ -210,9 +211,16 @@ export default function Home() {
     <>
     <Backdrop />
     <Nav current="ask" />
-    {recent.length > 0 && (
-      <aside className="recent" aria-label="Recent questions">
-        <button type="button" className="new-q" onClick={startNew}>+ New question</button>
+    {recent.length > 0 && <>
+      {/* Hovering the left edge opens the drawer; the tab opens it on click or touch */}
+      <div className="recent-zone" aria-hidden="true" />
+      <aside className={drawer ? "recent open" : "recent"} aria-label="Recent questions"
+             onMouseLeave={() => setDrawer(false)}>
+        <div className="recent-head">
+          <button type="button" className="new-q" onClick={startNew}>+ New question</button>
+          <button type="button" className="close" aria-label="Close recent questions"
+                  onClick={() => { setDrawer(false); document.activeElement?.blur(); }}>×</button>
+        </div>
         <p>Recent</p>
         <ul>
           {recent.slice(0, 25).map((h) => (
@@ -226,7 +234,8 @@ export default function Home() {
         </ul>
         <Link href="/history" className="all">See all history →</Link>
       </aside>
-    )}
+      <button type="button" className="recent-tab" onClick={() => setDrawer(true)}>Recent ({recent.length})</button>
+    </>}
     <main className={idle ? "hero" : undefined}>
       <h1 ref={title}><Words text="Cyber Defense RAG" /></h1>
       <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>
