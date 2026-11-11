@@ -220,7 +220,7 @@ export default function Home() {
 
   return (
     <>
-    <Backdrop />
+    <Backdrop hidden={!idle} />
     <Nav current="ask" />
     {recent.length > 0 && <>
       {/* Hovering the left edge opens the drawer; the tab opens it on click or touch */}

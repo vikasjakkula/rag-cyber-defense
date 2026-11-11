@@ -35,6 +35,8 @@ html[class] body { font-family: inherit; }
 }
 @keyframes turn { to { transform: rotate(360deg); } }
 .backdrop-gl, .backdrop-gl canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.backdrop-gl { transition: opacity 0.6s ease; }
+.backdrop-gl.hidden { opacity: 0; }
 
 main { max-width: 760px; margin: 0 auto; padding: 104px 16px 96px; text-align: center; }
 .word-mask { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: 0.08em; }

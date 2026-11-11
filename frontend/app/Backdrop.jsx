@@ -72,7 +72,8 @@ void main() {
   gl_FragColor = vec4(vColor, a);
 }`;
 
-export default function Backdrop({ shape = "sphere" }) {
+// `hidden` fades the particle sphere out, e.g. while a chat is on screen, so text stays clean
+export default function Backdrop({ shape = "sphere", hidden = false }) {
   const mount = useRef(null);
 
   useEffect(() => {
@@ -180,7 +181,7 @@ export default function Backdrop({ shape = "sphere" }) {
   return (
     <div className="backdrop" aria-hidden="true">
       <div className="backdrop-mesh" />
-      <div ref={mount} className="backdrop-gl" />
+      <div ref={mount} className={hidden ? "backdrop-gl hidden" : "backdrop-gl"} />
     </div>
   );
 }
