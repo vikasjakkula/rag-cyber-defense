@@ -174,11 +174,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px soli
   box-shadow: 0 8px 30px rgba(30, 36, 110, 0.08);
 }
 .topnav .brand { display: flex; align-items: center; gap: 10px; font-weight: 650; font-size: 15px; color: var(--text); text-decoration: none; white-space: nowrap; }
-.topnav .brand i {
-  width: 18px; height: 18px; border-radius: 50%;
-  background: conic-gradient(#f59e0b 0 25%, #ec4899 0 50%, #8b5cf6 0 75%, #14b8a6 0);
-  animation: spin 8s linear infinite;
-}
+.topnav .brand .logo { flex: none; }
+.logo-rings { transform-origin: 16px 16px; animation: turn 24s linear infinite; }
 .topnav .links { display: flex; gap: 2px; }
 .topnav .links a { padding: 7px 14px; border-radius: 999px; font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.2s, background 0.2s; }
 .topnav .links a:hover { color: var(--text); }
@@ -399,6 +396,6 @@ pre { background: var(--soft); border-radius: 10px; padding: 16px; overflow-x: a
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card, .skeleton span, .spin, .hint i, .ring-fill, .edge-flow, .node, .contour { animation: none; }
+  .card, .skeleton span, .spin, .hint i, .ring-fill, .edge-flow, .node, .contour, .logo-rings { animation: none; }
   .recent, .recent-tab { transition: none; }
 }
