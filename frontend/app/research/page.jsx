@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Backdrop from "../Backdrop";
 import Nav from "../Nav";
+import { useHeadline, useMotion, Words } from "../motion";
 
 // Fixed order and colours: our system first, the baseline second (validated for colour-blind safety)
 const SYSTEMS = [
@@ -55,6 +56,10 @@ function Bars({ summary }) {
 export default function Research() {
   const [report, setReport] = useState(null);
   const [failed, setFailed] = useState(false);
+  const scope = useRef(null);
+  const title = useRef(null);
+  useMotion(scope, report);
+  useHeadline(title);
 
   useEffect(() => {
     fetch("/eval-results.json")
@@ -72,11 +77,11 @@ export default function Research() {
 
   return (
     <>
-      <Backdrop />
+      <Backdrop shape="scroll" />
       <Nav current="research" />
-      <main className="research">
+      <main className="research" ref={scope}>
         <p className="eyebrow">Research results</p>
-        <h1>Does a knowledge graph make the AI more accurate?</h1>
+        <h1 ref={title}><Words text="Does a knowledge graph make the AI more accurate?" /></h1>
         <p className="sub">
           The base paper (PNNL-36792) showed four examples but no numbers. We measured it:
           the same model answers the same questions, once with our graph and once without.
@@ -88,29 +93,29 @@ export default function Research() {
         {report && (
           <>
             <section className="tiles">
-              <div className="tile">
+              <div className="tile" data-reveal>
                 <span>Accuracy</span>
-                <b>{pct(rag.accuracy)}</b>
+                <b data-count={Math.round(rag.accuracy * 100)} data-suffix="%">{pct(rag.accuracy)}</b>
                 <small>vs {pct(plain.accuracy)} without the graph</small>
               </div>
-              <div className="tile">
+              <div className="tile" data-reveal>
                 <span>Hallucinated IDs</span>
-                <b>{pct(rag.hallucination_rate)}</b>
+                <b data-count={Math.round(rag.hallucination_rate * 100)} data-suffix="%">{pct(rag.hallucination_rate)}</b>
                 <small>vs {pct(plain.hallucination_rate)} without the graph</small>
               </div>
-              <div className="tile">
+              <div className="tile" data-reveal>
                 <span>Median answer time</span>
                 <b>{rag.median_latency_s}s</b>
                 <small>vs {plain.median_latency_s}s without the graph</small>
               </div>
-              <div className="tile">
+              <div className="tile" data-reveal>
                 <span>Questions</span>
-                <b>{report.questions}</b>
+                <b data-count={report.questions}>{report.questions}</b>
                 <small>{Object.keys(TYPES).length} types · answers from Neo4j</small>
               </div>
             </section>
 
-            <section className="card">
+            <section className="card" data-reveal>
               <div className="chart-head">
                 <h2>Accuracy by question type</h2>
                 <div className="legend">
@@ -120,7 +125,7 @@ export default function Research() {
               <Bars summary={report.summary} />
             </section>
 
-            <section className="card">
+            <section className="card" data-reveal>
               <h2>How we tested it</h2>
               <ol className="steps">
                 <li><b>Questions with known answers.</b> We picked random CVEs, CWEs and CAPECs from Neo4j and wrote
@@ -135,7 +140,7 @@ export default function Research() {
             </section>
 
             {examples.length > 0 && (
-              <section className="card">
+              <section className="card" data-reveal>
                 <h2>Where the graph made the difference</h2>
                 <div className="table-scroll">
                   <table className="compare">
@@ -157,7 +162,7 @@ export default function Research() {
               </section>
             )}
 
-            <section className="card">
+            <section className="card" data-reveal>
               <h2>Limits, honestly</h2>
               <ul className="steps">
                 <li>{report.questions} questions is a pilot; the plan is 150 across more question types.</li>

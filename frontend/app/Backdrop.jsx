@@ -1,311 +1,178 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import * as THREE from "three";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Real CVE -> CWE -> CAPEC -> ATT&CK paths from our dataset, drawn as live attack paths on each side.
-const PATHS = [
-  ["CVE-2024-0001", "CWE-1188", "CAPEC-665", "T1211"],
-  ["CVE-2024-0002", "CWE-287", "CAPEC-114", "T1548"],
-  ["CVE-2024-0031", "CWE-20", "CAPEC-13", "T1574.006"],
-  ["CVE-2024-0138", "CWE-862", "CAPEC-665", "T1211"],
-  ["CVE-2024-0194", "CWE-434", "CAPEC-1", "T1574.010"],
-  ["CVE-2024-0195", "CWE-94", "CAPEC-35", "T1027.006"],
+// The knowledge graph as particles. Each colour is one layer of the chain: CVE, CWE, CAPEC, ATT&CK.
+const LAYERS = [
+  { color: "#f59e0b", share: 0.46, shell: 2.15, column: -2.7 }, // CVE: specific bugs (outer shell)
+  { color: "#ec4899", share: 0.2, shell: 1.6, column: -0.9 },   // CWE: the coding mistakes
+  { color: "#8b5cf6", share: 0.17, shell: 1.1, column: 0.9 },   // CAPEC: how attacks work
+  { color: "#14b8a6", share: 0.17, shell: 0.62, column: 2.7 },  // ATT&CK: what attackers do (core)
 ];
-// One colour per step of the chain: CVE, CWE, CAPEC, ATT&CK
-const COLORS = ["#f5a524", "#f472b6", "#8b5cf6", "#14b8a6"];
+const COUNT = 9000;
 
-// Flowing mesh gradient: blue, indigo and teal on the sides, a calm light centre for the text.
-const VERTEX = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
-const FRAGMENT = `
-precision highp float;
-uniform vec2 r;
-uniform float t;
-float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
-  return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-float fbm(vec2 p){float v=0.,a=.5;for(int k=0;k<5;k++){v+=a*n(p);p=p*2.02+vec2(1.7,9.2);a*=.5;}return v;}
-void main(){
-  vec2 uv=gl_FragCoord.xy/r;
-  vec2 p=uv*vec2(r.x/r.y,1.);
-  float s=t*.045;
-  vec2 q=vec2(fbm(p*1.3+s),fbm(p*1.3-s+4.3));
-  float m=fbm(p*1.7+q*1.8+vec2(s*.7,-s*.5));
-  vec3 cream=vec3(.988,.985,.975);
-  vec3 sky=vec3(.40,.60,1.);
-  vec3 indigo=vec3(.36,.33,.93);
-  vec3 teal=vec3(.16,.80,.74);
-  vec3 violet=vec3(.70,.47,.99);
-  vec3 c=mix(sky,indigo,smoothstep(.25,.78,m));
-  c=mix(c,teal,smoothstep(.55,.86,q.x)*.6);
-  c=mix(c,violet,smoothstep(.45,.9,q.y)*(1.-uv.y)*.9);
-  float side=abs(uv.x-.5)*2.;
-  float glow=length((uv-vec2(.5,.56))*vec2(1.25,1.8));
-  c=mix(cream,c,smoothstep(.12,.82,glow)*(.5+.5*side));
-  c=mix(c,cream,smoothstep(.74,1.,uv.y)*.85);
-  gl_FragColor=vec4(c,1.);
+// Shape A, "sphere": nested shells, bugs outside, attacker actions at the core.
+// Shape B, "chain": four discs left to right, the path a bug takes to an attacker action.
+function buildShapes() {
+  const sphere = new Float32Array(COUNT * 3);
+  const chain = new Float32Array(COUNT * 3);
+  const colors = new Float32Array(COUNT * 3);
+  const seeds = new Float32Array(COUNT);
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  let i = 0;
+  LAYERS.forEach((layer, li) => {
+    const n = li === LAYERS.length - 1 ? COUNT - i : Math.round(COUNT * layer.share);
+    const c = new THREE.Color(layer.color);
+    for (let k = 0; k < n; k++, i++) {
+      const y = 1 - (k / (n - 1)) * 2;
+      const r = Math.sqrt(1 - y * y);
+      const th = golden * k;
+      const jitter = 1 + (Math.random() - 0.5) * 0.06;
+      sphere.set([Math.cos(th) * r * layer.shell * jitter, y * layer.shell * jitter, Math.sin(th) * r * layer.shell * jitter], i * 3);
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.sqrt(Math.random()) * (0.55 + layer.share * 1.6);
+      chain.set([layer.column + (Math.random() - 0.5) * 0.18, Math.sin(a) * d, Math.cos(a) * d], i * 3);
+      colors.set([c.r, c.g, c.b], i * 3);
+      seeds[i] = Math.random();
+    }
+  });
+  return { sphere, chain, colors, seeds };
+}
+
+const VERTEX = `
+uniform float uTime, uMorph, uPixel, uPulse;
+attribute vec3 aChain;
+attribute float aSeed; // "color" is declared by three.js because vertexColors is on
+varying vec3 vColor;
+varying float vFade;
+void main() {
+  // each particle starts its morph a little later than the last, so the shape flows instead of jumping
+  float m = smoothstep(aSeed * 0.35, 0.65 + aSeed * 0.35, uMorph);
+  vec3 p = mix(position, aChain, m);
+  p += 0.035 * vec3(sin(uTime * 0.8 + aSeed * 40.0), cos(uTime * 0.7 + aSeed * 31.0), sin(uTime * 0.6 + aSeed * 23.0));
+  p *= 1.0 + uPulse * 0.06 * sin(aSeed * 6.28 + uTime * 4.0);
+  vec4 mv = modelViewMatrix * vec4(p, 1.0);
+  gl_Position = projectionMatrix * mv;
+  gl_PointSize = uPixel * (2.2 + aSeed * 2.4) * (6.0 / -mv.z);
+  vColor = color;
+  vFade = smoothstep(9.0, 4.0, -mv.z);
 }`;
 
-function startGradient(canvas) {
-  const gl = canvas.getContext("webgl", { antialias: false, premultipliedAlpha: false });
-  if (!gl) return null; // the CSS gradient on <body> stays visible instead
-  const compile = (type, src) => {
-    const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
-    return s;
-  };
-  const prog = gl.createProgram();
-  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERTEX));
-  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAGMENT));
-  gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
-  gl.useProgram(prog);
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const loc = gl.getAttribLocation(prog, "p");
-  gl.enableVertexAttribArray(loc);
-  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  const res = gl.getUniformLocation(prog, "r");
-  const time = gl.getUniformLocation(prog, "t");
-  return (t) => {
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.uniform2f(res, canvas.width, canvas.height);
-    gl.uniform1f(time, t);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-  };
-}
+const FRAGMENT = `
+varying vec3 vColor;
+varying float vFade;
+void main() {
+  float d = length(gl_PointCoord - 0.5);
+  if (d > 0.5) discard;
+  float a = smoothstep(0.5, 0.15, d) * (0.35 + 0.55 * vFade);
+  gl_FragColor = vec4(vColor, a);
+}`;
 
-// Lay the chains out in two side bands; each node drifts around its home spot.
-function layout(w, h) {
-  const band = Math.min(w * 0.27, 440);
-  const chains = PATHS.map((ids, i) => {
-    const right = i % 2 === 1;
-    const slot = Math.floor(i / 2);
-    const top = h * (0.12 + slot * 0.27);
-    return ids.map((id, j) => {
-      const x = band * (0.16 + 0.21 * j) + Math.sin(i * 7 + j * 3) * band * 0.05;
-      const y = top + (j % 2 ? 0.7 : 0.15) * h * 0.2 + Math.cos(i * 5 + j) * 14;
-      return { id, kind: j, right, x: right ? w - x : x, y, phase: i * 1.7 + j * 2.3 };
-    });
-  });
-  const dust = Array.from({ length: 80 }, (_, k) => {
-    const right = k % 2 === 1;
-    const x = Math.random() * band * 1.1;
-    return { x: right ? w - x : x, y: Math.random() * h, speed: 6 + Math.random() * 14, size: 0.6 + Math.random() * 1.6 };
-  });
-  const blips = Array.from({ length: 34 }, () => ({ x: Math.random() * w, y: Math.random() * h }));
-  return { band, chains, dust, blips };
-}
-
-// "Blueprint" template: drafting-paper grid with a radar sweep that lights up detected points
-function drawBlueprint(ctx, w, h, t, blips) {
-  ctx.fillStyle = "#f5f7fc";
-  ctx.fillRect(0, 0, w, h);
-  ctx.lineWidth = 1;
-  for (let x = 0; x <= w; x += 44) {
-    ctx.strokeStyle = x % 220 === 0 ? "rgba(59,91,219,0.13)" : "rgba(59,91,219,0.06)";
-    ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); ctx.stroke();
-  }
-  for (let y = 0; y <= h; y += 44) {
-    ctx.strokeStyle = y % 220 === 0 ? "rgba(59,91,219,0.13)" : "rgba(59,91,219,0.06)";
-    ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); ctx.stroke();
-  }
-  const cx = w / 2, cy = h + 60, R = Math.hypot(w / 2, h + 60);
-  ctx.strokeStyle = "rgba(59,91,219,0.09)";
-  for (let r = 180; r < R; r += 180) { ctx.beginPath(); ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI); ctx.stroke(); }
-  const sweep = Math.PI + ((t * 0.32) % 1) * Math.PI; // left to right across the top half
-  if (ctx.createConicGradient) {
-    const g = ctx.createConicGradient(sweep - 0.5, cx, cy);
-    g.addColorStop(0, "rgba(79,70,229,0)");
-    g.addColorStop(0.079, "rgba(79,70,229,0.08)");
-    g.addColorStop(0.08, "rgba(79,70,229,0)");
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, sweep - 0.5, sweep); ctx.closePath(); ctx.fill();
-  }
-  ctx.strokeStyle = "rgba(79,70,229,0.35)";
-  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(sweep) * R, cy + Math.sin(sweep) * R); ctx.stroke();
-  // Points glow right after the beam passes, then fade
-  for (const b of blips) {
-    const a = Math.atan2(b.y - cy, b.x - cx);
-    const since = (sweep - (a < 0 ? a + 2 * Math.PI : a) + 2 * Math.PI) % (2 * Math.PI);
-    const glow = since < 1.2 ? 1 - since / 1.2 : 0;
-    ctx.globalAlpha = 0.15 + glow * 0.75;
-    ctx.fillStyle = "#4f46e5";
-    ctx.beginPath(); ctx.arc(b.x, b.y, 2 + glow * 2.5, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-
-export const BACKGROUNDS = ["blueprint", "aurora"];
-
-export function savedBackground() {
-  try {
-    const v = localStorage.getItem("bg");
-    return BACKGROUNDS.includes(v) ? v : BACKGROUNDS[0];
-  } catch {
-    return BACKGROUNDS[0];
-  }
-}
-
-export default function Backdrop() {
-  const gradientRef = useRef(null);
-  const graphRef = useRef(null);
+export default function Backdrop({ shape = "sphere" }) {
+  const mount = useRef(null);
 
   useEffect(() => {
-    const bg = gradientRef.current;
-    const fg = graphRef.current;
-    const ctx = fg.getContext("2d");
+    gsap.registerPlugin(ScrollTrigger);
+    const el = mount.current;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const drawGradient = startGradient(bg);
-    const pointer = { x: -9999, y: -9999 };
-    const mode = { bg: savedBackground() };
-    const apply = () => {
-      document.documentElement.dataset.bg = mode.bg;
-      bg.style.opacity = mode.bg === "aurora" && drawGradient ? "1" : "0";
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    el.appendChild(renderer.domElement);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+    camera.position.set(0, 0, 7);
+
+    const { sphere, chain, colors, seeds } = buildShapes();
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(sphere, 3));
+    geometry.setAttribute("aChain", new THREE.BufferAttribute(chain, 3));
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geometry.setAttribute("aSeed", new THREE.BufferAttribute(seeds, 1));
+    const uniforms = {
+      uTime: { value: 0 }, uMorph: { value: shape === "chain" ? 1 : 0 },
+      uPixel: { value: renderer.getPixelRatio() }, uPulse: { value: 0 },
     };
-    const onBg = (e) => { mode.bg = e.detail; apply(); if (still) tick(8000); };
-    let w = 0, h = 0, dpr = 1, scene = null, frame = 0;
+    const material = new THREE.ShaderMaterial({
+      uniforms, vertexShader: VERTEX, fragmentShader: FRAGMENT,
+      transparent: true, depthWrite: false, vertexColors: true,
+    });
+    const points = new THREE.Points(geometry, material);
+    const group = new THREE.Group();
+    group.add(points);
+    scene.add(group);
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = window.innerWidth;
-      h = window.innerHeight;
-      for (const c of [bg, fg]) {
-        c.width = Math.round(w * dpr);
-        c.height = Math.round(h * dpr);
-      }
-      bg.width = Math.round(w * dpr * 0.5); // the gradient is soft, half resolution looks the same
-      bg.height = Math.round(h * dpr * 0.5);
-      scene = layout(w, h);
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      // Pull the camera back on narrow screens so the whole shape stays visible
+      camera.position.z = w < 700 ? 10.5 : 7;
+      camera.updateProjectionMatrix();
     }
+    resize();
 
-    // 1 at the screen edge, fading to 0 towards the centre column
-    const edgeFade = (x) => {
-      const d = Math.min(x, w - x);
-      return 1 - Math.min(1, Math.max(0, (d - scene.band * 0.7) / (scene.band * 0.5)));
+    // Entrance: particles gather from a wide cloud into the shape
+    group.scale.setScalar(still ? 1 : 2.4);
+    gsap.to(group.scale, { x: 1, y: 1, z: 1, duration: still ? 0 : 2.4, ease: "expo.out" });
+
+    // The pointer tilts the shape a little, smoothed by GSAP
+    const tiltX = gsap.quickTo(group.rotation, "x", { duration: 1.2, ease: "power3.out" });
+    const offsetY = gsap.quickTo(points.rotation, "y", { duration: 1.2, ease: "power3.out" });
+    const onMove = (e) => {
+      tiltX((e.clientY / window.innerHeight - 0.5) * 0.35);
+      offsetY((e.clientX / window.innerWidth - 0.5) * 0.6);
     };
 
-    function drawGraph(t) {
-      const small = w < 760;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      ctx.globalAlpha = 1;
-      const light = mode.bg === "blueprint";
-      if (light) drawBlueprint(ctx, w, h, t, scene.blips);
-
-      for (const d of scene.dust) {
-        const y = (((d.y - t * d.speed) % h) + h) % h;
-        ctx.globalAlpha = edgeFade(d.x) * (light ? 0.3 : 0.55) * (small ? 0.5 : 1);
-        ctx.fillStyle = light ? "#4f46e5" : "#ffffff";
-        ctx.beginPath();
-        ctx.arc(d.x + Math.sin(t * 0.5 + y * 0.02) * 6, y, d.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      scene.chains.forEach((chain, ci) => {
-        const pts = chain.map((nd) => {
-          let x = nd.x + Math.sin(t * 0.42 + nd.phase) * 9;
-          let y = nd.y + Math.cos(t * 0.35 + nd.phase * 1.3) * 9;
-          const dx = pointer.x - x, dy = pointer.y - y, dist = Math.hypot(dx, dy);
-          const near = Math.max(0, 1 - dist / 160);
-          x += dx * near * 0.12;
-          y += dy * near * 0.12;
-          return { ...nd, x, y, near };
-        });
-        const fade = edgeFade(pts[0].x) * (small ? 0.45 : 1);
-
-        // Links of the attack path
-        ctx.globalAlpha = 0.55 * fade;
-        ctx.strokeStyle = light ? "rgba(59,91,219,0.75)" : "rgba(255,255,255,0.9)";
-        ctx.lineWidth = 1.3;
-        ctx.setLineDash([4, 5]);
-        ctx.lineDashOffset = -t * 18;
-        ctx.beginPath();
-        pts.forEach((p, j) => (j ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // A pulse runs along the path: the exploit moving from bug to attacker action
-        const u = ((t * 0.38 + ci * 0.7) % (pts.length + 0.8)) - 0.4;
-        const at = (s) => {
-          const k = Math.max(0, Math.min(pts.length - 1.001, s));
-          const a = pts[Math.floor(k)], b = pts[Math.floor(k) + 1], f = k - Math.floor(k);
-          return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, kind: Math.round(k) };
-        };
-        if (u >= 0 && u <= pts.length - 1) {
-          for (let s = 0; s < 14; s++) {
-            const p = at(u - s * 0.03);
-            ctx.globalAlpha = fade * (1 - s / 14) * 0.9;
-            ctx.fillStyle = COLORS[p.kind];
-            ctx.shadowColor = COLORS[p.kind];
-            ctx.shadowBlur = 14;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 3.6 - s * 0.2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.shadowBlur = 0;
-        }
-
-        // Nodes, lit up as the pulse passes or the pointer comes near
-        pts.forEach((p, j) => {
-          const lit = Math.max(p.near, Math.max(0, 1 - Math.abs(u - j) * 2));
-          const r = 5 + lit * 3;
-          ctx.globalAlpha = fade;
-          ctx.shadowColor = COLORS[j];
-          ctx.shadowBlur = 10 + lit * 18;
-          ctx.fillStyle = "#ffffff";
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-          ctx.lineWidth = 2.5;
-          ctx.strokeStyle = COLORS[j];
-          ctx.stroke();
-
-          if (small) return;
-          ctx.font = "500 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
-          const tw = ctx.measureText(p.id).width;
-          const lx = p.right ? p.x - r - 10 - tw - 12 : p.x + r + 10;
-          ctx.globalAlpha = fade * (0.72 + lit * 0.28);
-          ctx.fillStyle = light ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.78)";
-          ctx.beginPath();
-          ctx.roundRect(lx, p.y - 10, tw + 12, 20, 10);
-          ctx.fill();
-          ctx.fillStyle = "#1b2140";
-          ctx.fillText(p.id, lx + 6, p.y + 4);
-        });
+    // On pages with sections, scrolling turns the sphere into the CVE -> ATT&CK chain
+    let trigger = null;
+    if (shape === "scroll") {
+      trigger = ScrollTrigger.create({
+        start: 0, end: () => window.innerHeight * 1.2, scrub: 1.2,
+        onUpdate: (self) => { uniforms.uMorph.value = self.progress; },
       });
     }
 
-    function tick(now) {
-      const t = now / 1000;
-      if (mode.bg === "aurora") drawGradient?.(t);
-      drawGraph(t);
+    // Other components ask for a pulse, e.g. when an answer arrives
+    const onPulse = () => gsap.fromTo(uniforms.uPulse, { value: 1 }, { value: 0, duration: 1.6, ease: "power2.out" });
+    const onShape = (e) => gsap.to(uniforms.uMorph, { value: e.detail === "chain" ? 1 : 0, duration: 2.2, ease: "power3.inOut" });
+
+    let frame = 0;
+    const clock = new THREE.Clock();
+    function tick() {
+      const t = clock.getElapsedTime();
+      uniforms.uTime.value = t;
+      group.rotation.y = t * 0.06 * (1 - uniforms.uMorph.value * 0.9);
+      renderer.render(scene, camera);
       if (!still) frame = requestAnimationFrame(tick);
     }
+    tick();
 
-    const onMove = (e) => { pointer.x = e.clientX; pointer.y = e.clientY; };
-    const onLeave = () => { pointer.x = pointer.y = -9999; };
-    resize();
-    apply();
-    window.addEventListener("bgchange", onBg);
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", onMove);
-    document.addEventListener("pointerleave", onLeave);
-    frame = requestAnimationFrame(tick);
+    window.addEventListener("graph:pulse", onPulse);
+    window.addEventListener("graph:shape", onShape);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("bgchange", onBg);
+      trigger?.kill();
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
-      document.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("graph:pulse", onPulse);
+      window.removeEventListener("graph:shape", onShape);
+      geometry.dispose();
+      material.dispose();
+      renderer.dispose();
+      el.removeChild(renderer.domElement);
     };
-  }, []);
+  }, [shape]);
 
   return (
-    <>
-      <canvas ref={gradientRef} className="backdrop gradient" aria-hidden="true" />
-      <canvas ref={graphRef} className="backdrop graph" aria-hidden="true" />
-    </>
+    <div className="backdrop" aria-hidden="true">
+      <div className="backdrop-glow" />
+      <div ref={mount} className="backdrop-gl" />
+    </div>
   );
 }

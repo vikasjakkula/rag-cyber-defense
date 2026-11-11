@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import AttackGraph from "./AttackGraph";
 import Backdrop from "./Backdrop";
 import Nav from "./Nav";
+import { useHeadline, Words } from "./motion";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://rag-cyber-defense.vercel.app";
 
@@ -89,6 +90,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
   const hint = useTypingHint(!focused && !question);
+  const title = useRef(null);
+  useHeadline(title);
 
   async function ask(q) {
     const text = (q ?? question).trim();
@@ -121,6 +124,7 @@ export default function Home() {
       const apply = (event) => {
         if (event.type === "facts") {
           setResult({ ...event, answer: "", details: "", live: { answer: true, details: event.facts.length > 0 } });
+          window.dispatchEvent(new Event("graph:pulse")); // the particle graph reacts to the answer
         } else if (event.type === "answer" || event.type === "details") {
           setResult((r) => ({ ...r, [event.type]: r[event.type] + event.delta }));
         } else if (event.type === "end") {
@@ -161,7 +165,7 @@ export default function Home() {
     <Backdrop />
     <Nav current="ask" />
     <main className={idle ? "hero" : undefined}>
-      <h1>Cyber Defense RAG</h1>
+      <h1 ref={title}><Words text="Cyber Defense RAG" /></h1>
       <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>
 
       <form className="ask" onSubmit={(e) => { e.preventDefault(); ask(); }}>

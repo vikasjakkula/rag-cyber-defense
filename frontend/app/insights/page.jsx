@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Backdrop from "../Backdrop";
 import Nav from "../Nav";
+import { useHeadline, useMotion, Words } from "../motion";
 
 const INK = "#4f46e5";
 // Severity is ordered, so it uses one hue from light to dark
@@ -19,7 +20,7 @@ const nvd = (id) => `https://nvd.nist.gov/vuln/detail/${id}`;
 // Every panel says what it shows and why it matters, so it can be presented in one breath
 function Panel({ step, title, what, why, children, wide }) {
   return (
-    <section className={wide ? "card panel wide" : "card panel"}>
+    <section className={wide ? "card panel wide" : "card panel"} data-reveal>
       <div className="panel-head">
         <span className="step">{step}</span>
         <div>
@@ -128,6 +129,10 @@ function Validation({ v }) {
 export default function Insights() {
   const [d, setD] = useState(null);
   const [failed, setFailed] = useState(false);
+  const scope = useRef(null);
+  const title = useRef(null);
+  useMotion(scope, d);
+  useHeadline(title);
   useEffect(() => {
     fetch("/analytics.json").then((r) => (r.ok ? r.json() : Promise.reject())).then(setD).catch(() => setFailed(true));
   }, []);
@@ -137,11 +142,11 @@ export default function Insights() {
 
   return (
     <>
-      <Backdrop />
+      <Backdrop shape="scroll" />
       <Nav current="insights" />
-      <main className="insights">
+      <main className="insights" ref={scope}>
         <p className="eyebrow">Insights · CVEs published in 2024</p>
-        <h1>What {d ? fmt(d.nodes.CVE) : "38,461"} vulnerabilities tell us</h1>
+        <h1 ref={title}><Words text="What 38,461 vulnerabilities tell us" /></h1>
         <p className="sub">Everything below is computed from our knowledge graph and CISA&apos;s list of bugs attackers really used.</p>
 
         {failed && <p className="card error">No analytics yet. Run <code>python -m analytics.build</code> in backend/.</p>}
@@ -158,7 +163,7 @@ export default function Insights() {
                 ["Links between them", d.links],
                 ["Really exploited (KEV)", d.validation.kev_in_data],
               ].map(([label, n]) => (
-                <div className="tile" key={label}><span>{label}</span><b>{fmt(n)}</b></div>
+                <div className="tile" key={label} data-reveal><span>{label}</span><b data-count={n}>{fmt(n)}</b></div>
               ))}
             </section>
 
