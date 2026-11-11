@@ -18,6 +18,7 @@
 /data/*
 !/data/raw/
 !/data/processed/
+!/data/eval/
 # 70 MB, regenerate with build_attack_path_dataset.py
 /data/processed/cyber_attack_path_dataset.csv
 

@@ -247,6 +247,11 @@ The CVE data currently covers 2024 only. The paper used every year (242,504 CVEs
 | Retrieval needs an ID in the question. | Hybrid retrieval: vector search finds the entry node, then the graph expands from it, so vague questions work too. |
 | Notebook only; production use is listed as future work. | A deployed web app with authentication, Docker and CI. |
 
+**First results (pilot, 50 questions with answers from the graph):** GraphRAG 100% accurate with 0%
+hallucinated IDs; the same model without the graph 7% accurate with 66% hallucinated IDs. Every live
+answer also gets a grounding check. Method, limits and how to rerun: [docs/RESEARCH.md](docs/RESEARCH.md).
+The app shows the results at `/research`.
+
 ---
 
 ## Live Deployment

@@ -13,6 +13,7 @@ from groq import Groq
 import config
 from graph import queries
 from graph.connection import run
+from rag.grounding import check as grounding_check
 
 ID_PATTERN = re.compile(r"\b(CVE-\d{4}-\d{4,}|CWE-\d+|CAPEC-\d+|T\d{4}(?:\.\d{3})?)\b", re.IGNORECASE)
 LOOKUPS = {"CVE": queries.CVE_CHAIN, "CWE": queries.CWE_CHAIN,
@@ -148,7 +149,9 @@ def answer(question):
     details = long.result()[0] if long else None
     if text and text.startswith(NO_ANSWER):  # the facts were unrelated, so there is nothing to explain
         details = None
-    return {"question": question, "answer": text, "details": details, "llm": llm, **retrieved}
+    grounding = grounding_check(" ".join(filter(None, [text, details])), retrieved)
+    return {"question": question, "answer": text, "details": details, "llm": llm,
+            "grounding": grounding, **retrieved}
 
 
 def stream_text(question, retrieved, system_prompt):
@@ -189,10 +192,14 @@ def answer_stream(question):
     for part, prompt in jobs:
         threading.Thread(target=pump, args=(part, prompt), daemon=True).start()
     running = len(jobs)
+    written = {"answer": "", "details": ""}
     while running:
         event = events.get()
         if event is None:
             running -= 1
-        else:
-            yield event
-    yield {"type": "done", "llm": config.GROQ_MODEL}
+            continue
+        if event["type"] in written:
+            written[event["type"]] += event["delta"]
+        yield event
+    yield {"type": "done", "llm": config.GROQ_MODEL,
+           "grounding": grounding_check(" ".join(written.values()), retrieved)}

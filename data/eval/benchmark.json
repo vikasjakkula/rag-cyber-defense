@@ -1,0 +1,452 @@
+[
+  {
+    "id": "severity-001",
+    "type": "severity",
+    "entity": "CVE-2024-38446",
+    "question": "What is the severity and CVSS base score of CVE-2024-38446?",
+    "truth": {
+      "severity": "MEDIUM",
+      "base_score": 6.5
+    }
+  },
+  {
+    "id": "severity-002",
+    "type": "severity",
+    "entity": "CVE-2024-54099",
+    "question": "What is the severity and CVSS base score of CVE-2024-54099?",
+    "truth": {
+      "severity": "HIGH",
+      "base_score": 7.1
+    }
+  },
+  {
+    "id": "severity-003",
+    "type": "severity",
+    "entity": "CVE-2024-45204",
+    "question": "What is the severity and CVSS base score of CVE-2024-45204?",
+    "truth": {
+      "severity": "MEDIUM",
+      "base_score": 4.3
+    }
+  },
+  {
+    "id": "severity-004",
+    "type": "severity",
+    "entity": "CVE-2024-36840",
+    "question": "What is the severity and CVSS base score of CVE-2024-36840?",
+    "truth": {
+      "severity": "CRITICAL",
+      "base_score": 9.1
+    }
+  },
+  {
+    "id": "severity-005",
+    "type": "severity",
+    "entity": "CVE-2024-11691",
+    "question": "What is the severity and CVSS base score of CVE-2024-11691?",
+    "truth": {
+      "severity": "HIGH",
+      "base_score": 8.8
+    }
+  },
+  {
+    "id": "severity-006",
+    "type": "severity",
+    "entity": "CVE-2024-49318",
+    "question": "What is the severity and CVSS base score of CVE-2024-49318?",
+    "truth": {
+      "severity": "CRITICAL",
+      "base_score": 9.8
+    }
+  },
+  {
+    "id": "severity-007",
+    "type": "severity",
+    "entity": "CVE-2024-36192",
+    "question": "What is the severity and CVSS base score of CVE-2024-36192?",
+    "truth": {
+      "severity": "MEDIUM",
+      "base_score": 5.4
+    }
+  },
+  {
+    "id": "severity-008",
+    "type": "severity",
+    "entity": "CVE-2024-2421",
+    "question": "What is the severity and CVSS base score of CVE-2024-2421?",
+    "truth": {
+      "severity": "CRITICAL",
+      "base_score": 9.8
+    }
+  },
+  {
+    "id": "severity-009",
+    "type": "severity",
+    "entity": "CVE-2024-12015",
+    "question": "What is the severity and CVSS base score of CVE-2024-12015?",
+    "truth": {
+      "severity": "HIGH",
+      "base_score": 7.7
+    }
+  },
+  {
+    "id": "severity-010",
+    "type": "severity",
+    "entity": "CVE-2024-38131",
+    "question": "What is the severity and CVSS base score of CVE-2024-38131?",
+    "truth": {
+      "severity": "HIGH",
+      "base_score": 8.8
+    }
+  },
+  {
+    "id": "cve_to_cwe-011",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-50419",
+    "question": "Which weakness (CWE) is behind CVE-2024-50419?",
+    "truth": [
+      "CWE-863"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-012",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-50118",
+    "question": "Which weakness (CWE) is behind CVE-2024-50118?",
+    "truth": [
+      "CWE-476"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-013",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-36409",
+    "question": "Which weakness (CWE) is behind CVE-2024-36409?",
+    "truth": [
+      "CWE-89"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-014",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-10783",
+    "question": "Which weakness (CWE) is behind CVE-2024-10783?",
+    "truth": [
+      "CWE-862"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-015",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-7054",
+    "question": "Which weakness (CWE) is behind CVE-2024-7054?",
+    "truth": [
+      "CWE-79"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-016",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-33996",
+    "question": "Which weakness (CWE) is behind CVE-2024-33996?",
+    "truth": [
+      "CWE-20"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-017",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-0427",
+    "question": "Which weakness (CWE) is behind CVE-2024-0427?",
+    "truth": [
+      "CWE-79"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-018",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-12445",
+    "question": "Which weakness (CWE) is behind CVE-2024-12445?",
+    "truth": [
+      "CWE-79"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-019",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-31047",
+    "question": "Which weakness (CWE) is behind CVE-2024-31047?",
+    "truth": [
+      "CWE-190"
+    ]
+  },
+  {
+    "id": "cve_to_cwe-020",
+    "type": "cve_to_cwe",
+    "entity": "CVE-2024-10555",
+    "question": "Which weakness (CWE) is behind CVE-2024-10555?",
+    "truth": [
+      "CWE-79"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-021",
+    "type": "cwe_to_capec",
+    "entity": "CWE-667",
+    "question": "Which attack patterns (CAPEC) exploit CWE-667?",
+    "truth": [
+      "CAPEC-25",
+      "CAPEC-26",
+      "CAPEC-27"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-022",
+    "type": "cwe_to_capec",
+    "entity": "CWE-158",
+    "question": "Which attack patterns (CAPEC) exploit CWE-158?",
+    "truth": [
+      "CAPEC-52",
+      "CAPEC-53"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-023",
+    "type": "cwe_to_capec",
+    "entity": "CWE-645",
+    "question": "Which attack patterns (CAPEC) exploit CWE-645?",
+    "truth": [
+      "CAPEC-2"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-024",
+    "type": "cwe_to_capec",
+    "entity": "CWE-564",
+    "question": "Which attack patterns (CAPEC) exploit CWE-564?",
+    "truth": [
+      "CAPEC-109"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-025",
+    "type": "cwe_to_capec",
+    "entity": "CWE-532",
+    "question": "Which attack patterns (CAPEC) exploit CWE-532?",
+    "truth": [
+      "CAPEC-215"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-026",
+    "type": "cwe_to_capec",
+    "entity": "CWE-1246",
+    "question": "Which attack patterns (CAPEC) exploit CWE-1246?",
+    "truth": [
+      "CAPEC-212"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-027",
+    "type": "cwe_to_capec",
+    "entity": "CWE-1245",
+    "question": "Which attack patterns (CAPEC) exploit CWE-1245?",
+    "truth": [
+      "CAPEC-74"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-028",
+    "type": "cwe_to_capec",
+    "entity": "CWE-798",
+    "question": "Which attack patterns (CAPEC) exploit CWE-798?",
+    "truth": [
+      "CAPEC-191",
+      "CAPEC-70"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-029",
+    "type": "cwe_to_capec",
+    "entity": "CWE-1271",
+    "question": "Which attack patterns (CAPEC) exploit CWE-1271?",
+    "truth": [
+      "CAPEC-74"
+    ]
+  },
+  {
+    "id": "cwe_to_capec-030",
+    "type": "cwe_to_capec",
+    "entity": "CWE-1193",
+    "question": "Which attack patterns (CAPEC) exploit CWE-1193?",
+    "truth": [
+      "CAPEC-1",
+      "CAPEC-180"
+    ]
+  },
+  {
+    "id": "capec_to_attack-031",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-448",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-448 map to?",
+    "truth": [
+      "T1027.009"
+    ]
+  },
+  {
+    "id": "capec_to_attack-032",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-233",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-233 map to?",
+    "truth": [
+      "T1548"
+    ]
+  },
+  {
+    "id": "capec_to_attack-033",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-94",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-94 map to?",
+    "truth": [
+      "T1557"
+    ]
+  },
+  {
+    "id": "capec_to_attack-034",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-545",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-545 map to?",
+    "truth": [
+      "T1005",
+      "T1555.001"
+    ]
+  },
+  {
+    "id": "capec_to_attack-035",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-700",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-700 map to?",
+    "truth": [
+      "T1599"
+    ]
+  },
+  {
+    "id": "capec_to_attack-036",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-652",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-652 map to?",
+    "truth": [
+      "T1558"
+    ]
+  },
+  {
+    "id": "capec_to_attack-037",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-114",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-114 map to?",
+    "truth": [
+      "T1548"
+    ]
+  },
+  {
+    "id": "capec_to_attack-038",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-11",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-11 map to?",
+    "truth": [
+      "T1036.006"
+    ]
+  },
+  {
+    "id": "capec_to_attack-039",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-309",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-309 map to?",
+    "truth": [
+      "T1016",
+      "T1049",
+      "T1590"
+    ]
+  },
+  {
+    "id": "capec_to_attack-040",
+    "type": "capec_to_attack",
+    "entity": "CAPEC-482",
+    "question": "Which MITRE ATT&CK techniques does CAPEC-482 map to?",
+    "truth": [
+      "T1498.001",
+      "T1499.001",
+      "T1499.002"
+    ]
+  },
+  {
+    "id": "cve_count-041",
+    "type": "cve_count",
+    "entity": "CWE-1326",
+    "question": "How many CVEs in the dataset are linked to CWE-1326?",
+    "truth": 3
+  },
+  {
+    "id": "cve_count-042",
+    "type": "cve_count",
+    "entity": "CWE-656",
+    "question": "How many CVEs in the dataset are linked to CWE-656?",
+    "truth": 3
+  },
+  {
+    "id": "cve_count-043",
+    "type": "cve_count",
+    "entity": "CWE-783",
+    "question": "How many CVEs in the dataset are linked to CWE-783?",
+    "truth": 13
+  },
+  {
+    "id": "cve_count-044",
+    "type": "cve_count",
+    "entity": "CWE-185",
+    "question": "How many CVEs in the dataset are linked to CWE-185?",
+    "truth": 3
+  },
+  {
+    "id": "cve_count-045",
+    "type": "cve_count",
+    "entity": "CWE-532",
+    "question": "How many CVEs in the dataset are linked to CWE-532?",
+    "truth": 175
+  },
+  {
+    "id": "cve_count-046",
+    "type": "cve_count",
+    "entity": "CWE-325",
+    "question": "How many CVEs in the dataset are linked to CWE-325?",
+    "truth": 2
+  },
+  {
+    "id": "cve_count-047",
+    "type": "cve_count",
+    "entity": "CWE-86",
+    "question": "How many CVEs in the dataset are linked to CWE-86?",
+    "truth": 2
+  },
+  {
+    "id": "cve_count-048",
+    "type": "cve_count",
+    "entity": "CWE-1336",
+    "question": "How many CVEs in the dataset are linked to CWE-1336?",
+    "truth": 32
+  },
+  {
+    "id": "cve_count-049",
+    "type": "cve_count",
+    "entity": "CWE-1004",
+    "question": "How many CVEs in the dataset are linked to CWE-1004?",
+    "truth": 3
+  },
+  {
+    "id": "cve_count-050",
+    "type": "cve_count",
+    "entity": "CWE-1262",
+    "question": "How many CVEs in the dataset are linked to CWE-1262?",
+    "truth": 3
+  }
+]

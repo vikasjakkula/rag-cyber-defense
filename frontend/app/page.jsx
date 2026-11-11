@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 
 import AttackGraph from "./AttackGraph";
 import Backdrop from "./Backdrop";
+import Nav from "./Nav";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://rag-cyber-defense.vercel.app";
 
@@ -125,7 +126,7 @@ export default function Home() {
         } else if (event.type === "end") {
           setResult((r) => ({ ...r, live: { ...r.live, [event.part]: false } }));
         } else if (event.type === "done") {
-          setResult((r) => ({ ...r, llm: event.llm }));
+          setResult((r) => ({ ...r, llm: event.llm, grounding: event.grounding }));
         } else if (event.type === "error" && !event.part) {
           throw new Error(event.detail);
         }
@@ -158,6 +159,7 @@ export default function Home() {
   return (
     <>
     <Backdrop />
+    <Nav current="ask" />
     <main className={idle ? "hero" : undefined}>
       <h1>Cyber Defense RAG</h1>
       <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>
@@ -211,6 +213,20 @@ export default function Home() {
             <div className="answer empty">
               The AI summary is unavailable right now, but the records below were found in the graph.
             </div>
+          )}
+
+          {/* Every ID and score the AI wrote, checked against the records Neo4j returned */}
+          {result.grounding?.score != null && !result.answer.startsWith(REFUSAL) && (
+            result.grounding.unsupported.length === 0 ? (
+              <p className="grounding ok">
+                Verified: all {result.grounding.supported.length} IDs and scores in this answer are in the graph.
+              </p>
+            ) : (
+              <p className="grounding warn">
+                {result.grounding.supported.length} of {result.grounding.supported.length + result.grounding.unsupported.length} claims
+                found in the graph. Not found: {result.grounding.unsupported.join(", ")}
+              </p>
+            )
           )}
 
           {result.mode === "id_lookup" && !result.answer.startsWith(REFUSAL) &&
