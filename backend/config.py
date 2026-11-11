@@ -12,4 +12,4 @@ GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 GROQ_REASONING_EFFORT = os.getenv("GROQ_REASONING_EFFORT", "medium")
 
 # Browser origins allowed to call the API
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://rag-cyber-defense-ox4x.vercel.app,http://localhost:3000").split(",")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://graphcyrag.vercel.app,https://rag-cyber-defense-ox4x.vercel.app,http://localhost:3000").split(",")

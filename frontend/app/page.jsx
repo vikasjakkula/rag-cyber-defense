@@ -4,6 +4,8 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import Backdrop from "./Backdrop";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://rag-cyber-defense.vercel.app";
 
 const EXAMPLES = [
@@ -82,21 +84,32 @@ export default function Home() {
   const sources = result ? collectSources(result) : [];
   const SHOWN = 12;
 
+  const idle = !result && !loading && !error;
+
   return (
-    <main>
+    <>
+    <Backdrop />
+    <main className={idle ? "hero" : undefined}>
       <h1>Cyber Defense RAG</h1>
       <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>
 
-      <form onSubmit={(e) => { e.preventDefault(); ask(); }}>
+      <form className="ask" onSubmit={(e) => { e.preventDefault(); ask(); }}>
         <input
+          aria-label="Your question"
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask about a vulnerability, weakness or attack technique…"
         />
-        <button disabled={loading}>{loading ? "Thinking…" : "Ask"}</button>
+        <button className="send" aria-label="Ask" disabled={loading || !question.trim()}>
+          {loading ? <span className="spin" /> : (
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M12 19V5M5.5 11.5 12 5l6.5 6.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </button>
       </form>
 
-      {!result && !loading && (
+      {idle && (
         <div className="examples">
           {EXAMPLES.map((ex) => (
             <button key={ex} className="chip" onClick={() => ask(ex)}>{ex}</button>
@@ -104,12 +117,12 @@ export default function Home() {
         </div>
       )}
 
-      {loading && <div className="skeleton"><span /><span /><span /></div>}
+      {loading && <div className="card skeleton"><span /><span /><span /></div>}
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="card error">{error}</p>}
 
       {result && (
-        <section>
+        <section className="card">
           {result.facts.length === 0 ? (
             <div className="answer empty">
               No matching records were found in the knowledge graph. Try a specific ID such as
@@ -174,5 +187,6 @@ export default function Home() {
         </section>
       )}
     </main>
+    </>
   );
 }
