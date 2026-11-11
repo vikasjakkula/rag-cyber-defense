@@ -79,7 +79,14 @@ export default function Backdrop({ shape = "sphere" }) {
     const el = mount.current;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    // Without WebGL (old GPU, blocked driver, some remote desktops) keep only the CSS glow
+    // instead of throwing, which would blank the whole page.
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    } catch {
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     el.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
