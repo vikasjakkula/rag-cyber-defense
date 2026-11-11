@@ -8,6 +8,7 @@ import AttackGraph from "./AttackGraph";
 import Backdrop from "./Backdrop";
 import Nav from "./Nav";
 import { loadHistory, saveEntry } from "./history";
+import Link from "next/link";
 import { useHeadline, Words } from "./motion";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://rag-cyber-defense.vercel.app";
@@ -94,14 +95,31 @@ export default function Home() {
   const title = useRef(null);
   useHeadline(title);
 
-  // /?h=<id> reopens a saved answer from History without asking the AI again
+  const [recent, setRecent] = useState([]);
+
+  // Show a saved answer straight from this browser's storage, without asking the AI again
+  function open(saved) {
+    setQuestion(saved.question);
+    setError("");
+    setResult({ ...saved, live: { answer: false, details: false } });
+    window.history.replaceState(null, "", `/?h=${saved.id}`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function startNew() {
+    setQuestion("");
+    setResult(null);
+    setError("");
+    window.history.replaceState(null, "", "/");
+  }
+
+  // /?h=<id> (links from the History page) opens that saved answer
   useEffect(() => {
+    const all = loadHistory();
+    setRecent(all);
     const id = new URLSearchParams(window.location.search).get("h");
-    const saved = id && loadHistory().find((h) => String(h.id) === id);
-    if (saved) {
-      setQuestion(saved.question);
-      setResult({ ...saved, live: { answer: false, details: false } });
-    }
+    const saved = id && all.find((h) => String(h.id) === id);
+    if (saved) open(saved);
   }, []);
 
   async function ask(q) {
@@ -170,7 +188,10 @@ export default function Home() {
       if (entry) {
         entry.live = { answer: false, details: false };
         show();
-        if (entry.answer) saveEntry(entry);
+        if (entry.answer) {
+          setRecent(saveEntry(entry));
+          window.history.replaceState(null, "", `/?h=${entry.id}`);
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong while getting your answer. Please try again in a moment.";
@@ -189,6 +210,23 @@ export default function Home() {
     <>
     <Backdrop />
     <Nav current="ask" />
+    {recent.length > 0 && (
+      <aside className="recent" aria-label="Recent questions">
+        <button type="button" className="new-q" onClick={startNew}>+ New question</button>
+        <p>Recent</p>
+        <ul>
+          {recent.slice(0, 25).map((h) => (
+            <li key={h.id}>
+              <button type="button" onClick={() => open(h)} title={h.question}
+                      className={result?.id === h.id ? "active" : undefined}>
+                {h.question}
+              </button>
+            </li>
+          ))}
+        </ul>
+        <Link href="/history" className="all">See all history →</Link>
+      </aside>
+    )}
     <main className={idle ? "hero" : undefined}>
       <h1 ref={title}><Words text="Cyber Defense RAG" /></h1>
       <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>

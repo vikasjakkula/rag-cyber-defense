@@ -233,6 +233,25 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px soli
   .hbar { grid-template-columns: minmax(0, 130px) 1fr 56px; }
 }
 
+/* ---- recent questions sidebar on the Ask page */
+.recent {
+  position: fixed; top: 88px; left: 16px; bottom: 16px; z-index: 5; width: 250px;
+  display: flex; flex-direction: column; padding: 14px;
+  background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.95); border-radius: 20px;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 12px 36px rgba(30, 36, 110, 0.08);
+}
+.recent .new-q { padding: 10px 14px; border: 0; border-radius: 12px; background: var(--ink); color: #fff; font-size: 14px; text-align: left; }
+.recent p { margin: 16px 6px 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.recent ul { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 0; display: grid; align-content: start; gap: 2px; }
+.recent li button {
+  width: 100%; padding: 8px 10px; border: 0; border-radius: 10px; background: transparent; text-align: left;
+  font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.recent li button:hover { background: rgba(20, 23, 38, 0.05); }
+.recent li button.active { background: rgba(79, 70, 229, 0.1); color: #3730a3; font-weight: 550; }
+.recent .all { margin-top: 8px; padding: 6px 10px; font-size: 13px; color: var(--accent); text-decoration: none; }
+@media (max-width: 1180px) { .recent { display: none; } }
+
 /* ---- history page */
 .history { max-width: 860px; }
 .history h1 { max-width: 720px; margin: 0 auto; }
