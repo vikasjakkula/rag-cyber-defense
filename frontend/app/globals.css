@@ -283,6 +283,10 @@ main.chat { padding-bottom: 170px; }
 .reply.skeleton { display: grid; gap: 12px; }
 
 /* ---- chat thread on the Ask page */
+/* Every question bubble ends on the same right edge; every answer starts on the same left edge */
+main.chat .turn, main.chat .reply { display: flex; flex-direction: column; align-items: stretch; margin: 26px 0 0; padding: 0; text-align: left; }
+main.chat .turn-q, main.chat .q-echo { align-self: flex-end; margin: 0 0 12px; }
+main.chat .turn-a, main.chat .reply .answer { padding: 0; margin: 0; font-size: 17px; line-height: 1.6; letter-spacing: 0; }
 .turn { margin-top: 22px; text-align: left; }
 .turn-q, .q-echo {
   margin: 0 0 10px auto; width: fit-content; max-width: 85%; padding: 10px 16px;
