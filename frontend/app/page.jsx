@@ -44,7 +44,7 @@ function collectSources(result) {
   return [...seen].map(([id, name]) => ({ id, name }));
 }
 
-const REFUSAL = "I don't have information";
+const REFUSAL = "I only answer cybersecurity questions";
 
 // Types the example questions into the empty box, left to right, then erases and moves to the next
 function useTypingHint(active) {
@@ -97,10 +97,15 @@ export default function Home() {
 
   const [recent, setRecent] = useState([]);
   const [drawer, setDrawer] = useState(false);
+  // Earlier answers in this chat, shown above the current one and sent back so follow-ups have context
+  const [thread, setThread] = useState([]);
+  const current = useRef(null);
+  useEffect(() => { current.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [result?.id]);
 
   // Show a saved answer straight from this browser's storage, without asking the AI again
   function open(saved) {
-    setQuestion(saved.question);
+    setThread([]);
+    setQuestion("");
     setError("");
     setResult({ ...saved, live: { answer: false, details: false } });
     window.history.replaceState(null, "", `/?h=${saved.id}`);
@@ -108,6 +113,7 @@ export default function Home() {
   }
 
   function startNew() {
+    setThread([]);
     setQuestion("");
     setResult(null);
     setError("");
@@ -126,7 +132,9 @@ export default function Home() {
   async function ask(q) {
     const text = (q ?? question).trim();
     if (!text) return;
-    setQuestion(text);
+    const earlier = result?.answer && !result.live?.answer ? [...thread, result] : thread;
+    setThread(earlier);
+    setQuestion("");
     setLoading(true);
     setError("");
     setResult(null);
@@ -134,7 +142,10 @@ export default function Home() {
       const res = await fetch(`${API_URL}/ask/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text }),
+        body: JSON.stringify({
+          question: text,
+          history: earlier.slice(-6).map((t) => ({ question: t.question, answer: t.answer })),
+        }),
       });
       if (!res.ok) {
         let detail = "The backend returned an error.";
@@ -205,7 +216,7 @@ export default function Home() {
   const sources = result ? collectSources(result) : [];
   const SHOWN = 12;
 
-  const idle = !result && !loading && !error;
+  const idle = !result && !loading && !error && thread.length === 0;
 
   return (
     <>
@@ -268,18 +279,21 @@ export default function Home() {
         </div>
       )}
 
+      {thread.map((t) => (
+        <div className="turn" key={t.id}>
+          <p className="turn-q">{t.question}</p>
+          <div className="turn-a"><ReactMarkdown remarkPlugins={[remarkGfm]}>{t.answer}</ReactMarkdown></div>
+        </div>
+      ))}
+
       {loading && !result && <div className="card skeleton"><span /><span /><span /></div>}
 
       {error && <p className="card error">{error}</p>}
 
       {result && (
-        <section className="card" key={result.question}>
-          {result.facts.length === 0 ? (
-            <div className="answer empty">
-              No matching records were found in the knowledge graph. Try a specific ID such as
-              CVE-2024-24919 or CWE-287, or different keywords.
-            </div>
-          ) : result.answer ? (
+        <section className="card" key={result.id} ref={current}>
+          <p className="q-echo">{result.question}</p>
+          {result.answer ? (
             <div className="answer">
               <Typed text={result.answer} live={result.live?.answer} />
             </div>
@@ -287,7 +301,7 @@ export default function Home() {
             <div className="skeleton"><span /><span /></div>
           ) : (
             <div className="answer empty">
-              The AI summary is unavailable right now, but the records below were found in the graph.
+              The AI is unavailable right now (it may have reached its daily limit). Any records found are listed below.
             </div>
           )}
 

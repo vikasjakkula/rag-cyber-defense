@@ -13,6 +13,8 @@ router = APIRouter()
 
 class Question(BaseModel):
     question: str
+    # Earlier turns of this chat, [{"question": ..., "answer": ...}], so follow-ups have context
+    history: list[dict] = []
 
 
 @router.get("/health")
@@ -38,7 +40,7 @@ def ask(body: Question):
     if not body.question.strip():
         raise HTTPException(400, "question is empty")
     try:
-        return answer(body.question.strip())
+        return answer(body.question.strip(), body.history)
     except Exception as exc:
         raise HTTPException(500, f"API error: {exc}") from exc
 
@@ -51,7 +53,7 @@ def ask_stream(body: Question):
 
     def lines():
         try:
-            for event in answer_stream(body.question.strip()):
+            for event in answer_stream(body.question.strip(), body.history):
                 yield json.dumps(event, default=str) + "\n"
         except Exception as exc:
             yield json.dumps({"type": "error", "detail": f"API error: {exc}"}) + "\n"

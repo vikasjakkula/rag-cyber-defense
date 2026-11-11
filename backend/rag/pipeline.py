@@ -20,33 +20,38 @@ LOOKUPS = {"CVE": queries.CVE_CHAIN, "CWE": queries.CWE_CHAIN,
            "CAPEC": queries.CAPEC_CHAIN, "T": queries.ATTACK_NODE}
 MAX_LIST = 40  # cap long neighbour lists so the prompt stays small
 MAX_PATHS = 150  # paths are short strings, so keep more of them
-NO_ANSWER = "I don't have information"  # how SYSTEM_PROMPT starts its refusal
+NO_ANSWER = "I only answer cybersecurity questions"  # how SYSTEM_PROMPT starts its refusal
+MAX_TURNS = 6  # earlier question/answer pairs sent back to the model, so follow-ups make sense
 
-SYSTEM_PROMPT = """You answer cybersecurity questions for people who are not security experts.
-Use ONLY the JSON facts given. They come from a knowledge graph that links CVE (a specific bug
-in real software), CWE (the type of mistake behind it), CAPEC (how attackers exploit it) and
-ATT&CK (what attackers do once they get in).
+SYSTEM_PROMPT = """You are a friendly cybersecurity assistant, like ChatGPT but only for security, for people
+who are not security experts. You answer about specific bugs and also about cybersecurity in general:
+trends, common attacks, how to stay safe, careers, tools and concepts.
+
+Each message may include JSON facts from our knowledge graph that links CVE (a specific bug in real
+software), CWE (the type of mistake behind it), CAPEC (how attackers exploit it) and ATT&CK (what
+attackers do once they get in).
 
 How to answer:
-- Answer exactly what was asked, first. Match the length to the question: if a word or number
-  answers it, reply with just that plus a few words of meaning. Otherwise 1 to 3 short sentences, never more.
-- Write for someone with no security background. Use everyday words and say what things mean in
-  practice ("lets an attacker read passwords from the device"), not official titles. Mention an ID
-  only in brackets after the plain description, e.g. "leaking private information (CWE-200)".
-- No headings, bullet points, tables or bold text.
-- When there are many results, give the total from "counts" and name the 2 or 3 that matter most
-  to a defender: the most damaging (stealing logins, taking control, spreading), not just the first listed.
-- When it helps, end with what to do about it, using the "mitigations" or the description in the facts.
-- "paths" lists the real links (e.g. "CWE-200 -> CAPEC-169 -> T1592"). Describe connections only from these.
-- Never invent IDs, scores, counts, fixes or links. Lists may be cut short, so take totals from "counts".
-- If the facts do not answer the question or are unrelated to it, reply exactly:
-  "I don't have information about that in the security data." Never answer from your own knowledge.
+- At most 5 short lines, in simple everyday English. Answer exactly what was asked, first.
+- When the facts relate to the question, use them: they are the truth for IDs, scores, counts and links.
+  "paths" lists the real links; describe connections only from these. Take totals from "counts".
+- When the facts are empty or unrelated but the question is about cybersecurity, answer from your
+  general knowledge. Never invent CVE, CWE, CAPEC or ATT&CK IDs, scores or counts that are not in the facts.
+- This is a conversation. Use the earlier messages to understand follow-ups such as "how do I fix it?",
+  "explain simpler" or "what about the second one?".
+- Say what things mean in practice ("lets an attacker read passwords"), not official titles. Mention an
+  ID only in brackets after the plain description, e.g. "leaking private information (CWE-200)".
+- Short bullet points are fine for lists. No headings or tables.
+- When there are many results, give the total and name the 2 or 3 most damaging.
+- When it helps, end with what to do about it.
+- If the question is not about cybersecurity, reply exactly: "I only answer cybersecurity questions."
 
 Examples of the style:
 Q: How severe is CVE-2024-24919?
 A: High, 8.6 out of 10. Attackers can read private information from the affected Check Point gateways over the internet.
-Q: What is CWE-89?
-A: A coding mistake where user input is mixed straight into database commands, so an attacker can read or change the data (SQL injection). Fix it by using parameterised queries."""
+Q: What is ransomware?
+A: Malware that locks or steals your files and demands payment to give them back. It usually gets in
+through phishing emails or unpatched servers. Keep offline backups and patch quickly."""
 
 # Shown under the short answer, for readers who want the technical picture.
 DETAILS_PROMPT = """You write the technical explanation shown under a short cybersecurity answer.
@@ -88,8 +93,13 @@ def trim(value, limit=MAX_LIST):
     return value
 
 
-def retrieve(question):
+def retrieve(question, history=()):
     ids = extract_ids(question)
+    # A follow-up like "how do I fix it?" names no ID: reuse the IDs of the latest turn that had some
+    for turn in reversed(list(history)[-2:]):
+        if ids:
+            break
+        ids = extract_ids(f"{turn.get('question', '')} {turn.get('answer', '')}")[:3]
     if ids:
         facts, missing = [], []
         for entity_id in ids:
@@ -110,27 +120,30 @@ def retrieve(question):
     return {"mode": "keyword_search", "ids": [], "facts": facts, "not_found": []}
 
 
-def chat(question, retrieved, system_prompt, stream=False):
+def chat(question, retrieved, system_prompt, stream=False, history=()):
     """One Groq call with the facts as context."""
     client = Groq(api_key=config.GROQ_API_KEY)
     # Configurable thinking, and don't send the reasoning text back: smaller, faster response.
     reasoning = ({"reasoning_effort": config.GROQ_REASONING_EFFORT, "include_reasoning": False}
                  if config.GROQ_REASONING_EFFORT else {})
-    messages = [
-        {"role": "system", "content": system_prompt},
+    messages = [{"role": "system", "content": system_prompt}]
+    for turn in list(history)[-MAX_TURNS:]:  # earlier turns, so follow-up questions have context
+        messages += [{"role": "user", "content": turn.get("question", "")},
+                     {"role": "assistant", "content": turn.get("answer", "")}]
+    messages += [
         {"role": "user", "content": f"Question: {question}\n\nFacts:\n{json.dumps(retrieved, default=str)}"},
     ]
     return client.chat.completions.create(
         model=config.GROQ_MODEL, temperature=0.1, messages=messages, stream=stream, **reasoning)
 
 
-def generate(question, retrieved, system_prompt=SYSTEM_PROMPT):
+def generate(question, retrieved, system_prompt=SYSTEM_PROMPT, history=()):
     """Returns (answer, llm_status). An LLM failure never hides the retrieved facts."""
     if not config.GROQ_API_KEY:
         return None, "not configured (set GROQ_API_KEY)"
     try:
         for _ in range(2):  # the model occasionally returns an empty message; retry once
-            response = chat(question, retrieved, system_prompt)
+            response = chat(question, retrieved, system_prompt, history=history)
             text = (response.choices[0].message.content or "").strip()
             if text:
                 return text, config.GROQ_MODEL
@@ -139,12 +152,13 @@ def generate(question, retrieved, system_prompt=SYSTEM_PROMPT):
         return None, f"{config.GROQ_MODEL} failed: {exc}"
 
 
-def answer(question):
-    retrieved = retrieve(question)
+def answer(question, history=()):
+    retrieved = retrieve(question, history)
     # Both calls run at once so the explanation doesn't double the wait.
     with ThreadPoolExecutor(max_workers=2) as pool:
-        short = pool.submit(generate, question, retrieved)
-        long = pool.submit(generate, question, retrieved, DETAILS_PROMPT) if retrieved["facts"] else None
+        short = pool.submit(generate, question, retrieved, SYSTEM_PROMPT, history)
+        explain = retrieved["mode"] == "id_lookup" and retrieved["facts"]
+        long = pool.submit(generate, question, retrieved, DETAILS_PROMPT, history) if explain else None
     text, llm = short.result()
     details = long.result()[0] if long else None
     if text and text.startswith(NO_ANSWER):  # the facts were unrelated, so there is nothing to explain
@@ -154,11 +168,11 @@ def answer(question):
             "grounding": grounding, **retrieved}
 
 
-def stream_text(question, retrieved, system_prompt):
+def stream_text(question, retrieved, system_prompt, history=()):
     """Yields the answer piece by piece as Groq writes it."""
     for _ in range(2):  # retry once if the model sends nothing
         sent = False
-        for chunk in chat(question, retrieved, system_prompt, stream=True):
+        for chunk in chat(question, retrieved, system_prompt, stream=True, history=history):
             piece = chunk.choices[0].delta.content if chunk.choices else None
             if piece:
                 sent = True
@@ -167,9 +181,9 @@ def stream_text(question, retrieved, system_prompt):
             return
 
 
-def answer_stream(question):
+def answer_stream(question, history=()):
     """Events for the typing effect: the facts first, then answer and details text as it arrives."""
-    retrieved = retrieve(question)
+    retrieved = retrieve(question, history)
     yield {"type": "facts", "question": question, **retrieved}
     if not config.GROQ_API_KEY:
         yield {"type": "done", "llm": "not configured (set GROQ_API_KEY)"}
@@ -180,7 +194,7 @@ def answer_stream(question):
 
     def pump(part, prompt):
         try:
-            for piece in stream_text(question, retrieved, prompt):
+            for piece in stream_text(question, retrieved, prompt, history):
                 events.put({"type": part, "delta": piece})
         except Exception as exc:
             events.put({"type": "error", "part": part, "detail": f"{config.GROQ_MODEL} failed: {exc}"})
@@ -188,7 +202,9 @@ def answer_stream(question):
             events.put({"type": "end", "part": part})
             events.put(None)
 
-    jobs = [("answer", SYSTEM_PROMPT)] + ([("details", DETAILS_PROMPT)] if retrieved["facts"] else [])
+    # The technical explanation only makes sense when specific records were looked up
+    explain = retrieved["mode"] == "id_lookup" and retrieved["facts"]
+    jobs = [("answer", SYSTEM_PROMPT)] + ([("details", DETAILS_PROMPT)] if explain else [])
     for part, prompt in jobs:
         threading.Thread(target=pump, args=(part, prompt), daemon=True).start()
     running = len(jobs)
