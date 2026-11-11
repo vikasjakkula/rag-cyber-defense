@@ -14,22 +14,6 @@ const LAYERS = [
 ];
 const COUNT = 9000;
 
-// Topographic contour lines around three corners, like a map of the attack surface.
-// Each ring is a circle with a few sine waves added to its radius, so it looks hand drawn.
-function contour(cx, cy, seed) {
-  const rings = [];
-  for (let r = 36, k = 0; r < 520; r += 30, k++) {
-    let d = "";
-    for (let s = 0; s <= 120; s++) {
-      const a = (s / 120) * Math.PI * 2;
-      const rr = r * (1 + 0.09 * Math.sin(3 * a + seed + k * 0.35) + 0.05 * Math.sin(5 * a - seed * 2 + k * 0.2));
-      d += `${s ? "L" : "M"}${(cx + Math.cos(a) * rr).toFixed(1)},${(cy + Math.sin(a) * rr).toFixed(1)}`;
-    }
-    rings.push(d + "Z");
-  }
-  return { x: cx, y: cy, rings };
-}
-const CONTOURS = [contour(60, 120, 0.4), contour(960, 900, 2.1), contour(940, 40, 4.2)];
 
 // Shape A, "sphere": nested shells, bugs outside, attacker actions at the core.
 // Shape B, "chain": four discs left to right, the path a bug takes to an attacker action.
@@ -195,14 +179,7 @@ export default function Backdrop({ shape = "sphere" }) {
 
   return (
     <div className="backdrop" aria-hidden="true">
-      <div className="backdrop-paper" />
-      <svg className="contours" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
-        {CONTOURS.map((c, i) => (
-          <g key={i} className={`contour c${i}`} style={{ transformOrigin: `${c.x}px ${c.y}px` }}>
-            {c.rings.map((d, j) => <path key={j} d={d} />)}
-          </g>
-        ))}
-      </svg>
+      <div className="backdrop-mesh" />
       <div ref={mount} className="backdrop-gl" />
     </div>
   );

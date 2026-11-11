@@ -7,7 +7,7 @@ const PAGES = [
   ["insights", "/insights", "Insights"], ["research", "/research", "Research"],
 ];
 
-// A small version of the background: cream paper, terracotta contour rings and the four layer dots
+// A small version of the background: rings and the four layer dots (CVE, CWE, CAPEC, ATT&CK)
 function ring(r, seed) {
   let d = "";
   for (let s = 0; s <= 48; s++) {
@@ -23,9 +23,9 @@ const DOTS = [["#f59e0b", 22, 8], ["#ec4899", 9, 12], ["#8b5cf6", 23, 21], ["#14
 function Logo() {
   return (
     <svg className="logo" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-      <circle cx="16" cy="16" r="15" fill="#f5f4ee" stroke="#e3ddd0" />
+      <circle cx="16" cy="16" r="15" fill="#ffffff" stroke="#e6e1f5" />
       <g className="logo-rings">
-        {RINGS.map((d) => <path key={d} d={d} fill="none" stroke="#c96442" strokeWidth="1" opacity="0.7" />)}
+        {RINGS.map((d) => <path key={d} d={d} fill="none" stroke="#8b5cf6" strokeWidth="1" opacity="0.7" />)}
       </g>
       {DOTS.map(([c, x, y]) => <circle key={c} cx={x} cy={y} r="1.8" fill={c} />)}
     </svg>

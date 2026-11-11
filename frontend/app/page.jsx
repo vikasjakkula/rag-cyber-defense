@@ -247,11 +247,13 @@ export default function Home() {
       </aside>
       <button type="button" className="recent-tab" onClick={() => setDrawer(true)}>Recent ({recent.length})</button>
     </>}
-    <main className={idle ? "hero" : undefined}>
-      <h1 ref={title}><Words text="Cyber Defense RAG" /></h1>
-      <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>
+    <main className={idle ? "hero" : "chat"}>
+      {idle && <>
+        <h1 ref={title}><Words text="Cyber Defense RAG" /></h1>
+        <p className="sub">Answers grounded in a CVE → CWE → CAPEC → ATT&amp;CK knowledge graph</p>
+      </>}
 
-      <form className="ask" onSubmit={(e) => { e.preventDefault(); ask(); }}>
+      <form className={idle ? "ask" : "ask docked"} onSubmit={(e) => { e.preventDefault(); ask(); }}>
         <div className="field">
           <input
             aria-label="Ask about a vulnerability, weakness or attack technique"
@@ -286,12 +288,12 @@ export default function Home() {
         </div>
       ))}
 
-      {loading && !result && <div className="card skeleton"><span /><span /><span /></div>}
+      {loading && !result && <div className="reply skeleton"><span /><span /><span /></div>}
 
       {error && <p className="card error">{error}</p>}
 
       {result && (
-        <section className="card" key={result.id} ref={current}>
+        <section className="reply" key={result.id} ref={current}>
           <p className="q-echo">{result.question}</p>
           {result.answer ? (
             <div className="answer">
@@ -333,7 +335,7 @@ export default function Home() {
             <p className="note">Not in the dataset: {result.not_found.join(", ")}</p>
           )}
 
-          {sources.length > 0 && (
+          {result.mode === "id_lookup" && sources.length > 0 && (
             <div className="sources">
               <h2>Sources <span className="count">{sources.length}</span></h2>
               <ul>
