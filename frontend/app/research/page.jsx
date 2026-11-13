@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import Backdrop from "../Backdrop";
 import Nav from "../Nav";
-import { useHeadline, useMotion, Words } from "../motion";
+import { useReveal, Words } from "../motion";
 
 // Fixed order and colours: our system first, the baseline second (validated for colour-blind safety)
 const SYSTEMS = [
@@ -57,9 +57,7 @@ export default function Research() {
   const [report, setReport] = useState(null);
   const [failed, setFailed] = useState(false);
   const scope = useRef(null);
-  const title = useRef(null);
-  useMotion(scope, report);
-  useHeadline(title);
+  useReveal(scope, report);
 
   useEffect(() => {
     fetch("/eval-results.json")
@@ -81,7 +79,7 @@ export default function Research() {
       <Nav current="research" />
       <main className="research" ref={scope}>
         <p className="eyebrow">Research results</p>
-        <h1 ref={title}><Words text="Does a knowledge graph make the AI more accurate?" /></h1>
+        <h1><Words text="Does a knowledge graph make the AI more accurate?" /></h1>
         <p className="sub">
           The base paper (PNNL-36792) showed four examples but no numbers. We measured it:
           the same model answers the same questions, once with our graph and once without.

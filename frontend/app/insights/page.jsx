@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import Backdrop from "../Backdrop";
 import Nav from "../Nav";
-import { useHeadline, useMotion, Words } from "../motion";
+import { useReveal, Words } from "../motion";
 
 const INK = "#4f46e5";
 // Severity is ordered, so it uses one hue from light to dark
@@ -75,7 +75,7 @@ function Trend({ months }) {
           </g>
         ))}
         <path d={`${line} L${x(months.length - 1)},${H - P.b} L${x(0)},${H - P.b} Z`} className="area" />
-        <path d={line} className="line" />
+        <path d={line} className="line" pathLength="1" />
         {months.map((m, i) => (
           <text key={m.month} x={x(i)} y={H - 8} textAnchor="middle" className="axis">{label(m)}</text>
         ))}
@@ -130,9 +130,7 @@ export default function Insights() {
   const [d, setD] = useState(null);
   const [failed, setFailed] = useState(false);
   const scope = useRef(null);
-  const title = useRef(null);
-  useMotion(scope, d);
-  useHeadline(title);
+  useReveal(scope, d);
   useEffect(() => {
     fetch("/analytics.json").then((r) => (r.ok ? r.json() : Promise.reject())).then(setD).catch(() => setFailed(true));
   }, []);
@@ -146,7 +144,7 @@ export default function Insights() {
       <Nav current="insights" />
       <main className="insights" ref={scope}>
         <p className="eyebrow">Insights · CVEs published in 2024</p>
-        <h1 ref={title}><Words text="What 38,461 vulnerabilities tell us" /></h1>
+        <h1><Words text="What 38,461 vulnerabilities tell us" /></h1>
         <p className="sub">Everything below is computed from our knowledge graph and CISA&apos;s list of bugs attackers really used.</p>
 
         {failed && <p className="card error">No analytics yet. Run <code>python -m analytics.build</code> in backend/.</p>}

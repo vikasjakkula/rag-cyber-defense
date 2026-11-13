@@ -43,9 +43,7 @@ def ask_plain(question):
 
 
 def ask_graphrag(question):
-    retrieved = pipeline.retrieve(question)
-    text, _ = pipeline.generate(question, retrieved)
-    return text or ""
+    return pipeline.answer(question, explain=False)["answer"]
 
 
 def with_retry(fn, question):

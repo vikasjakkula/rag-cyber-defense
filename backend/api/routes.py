@@ -1,3 +1,4 @@
+"""The API the website calls. Each function below is one URL."""
 import json
 
 from fastapi import APIRouter, HTTPException
@@ -12,13 +13,14 @@ router = APIRouter()
 
 
 class Question(BaseModel):
+    """What the website sends: the question, plus earlier turns of the chat for follow-ups."""
     question: str
-    # Earlier turns of this chat, [{"question": ..., "answer": ...}], so follow-ups have context
-    history: list[dict] = []
+    history: list[dict] = []  # [{"question": ..., "answer": ...}, ...]
 
 
 @router.get("/health")
 def health():
+    """Is the database reachable, and how many nodes does it hold?"""
     try:
         driver.verify_connectivity()
         nodes = run("MATCH (n) RETURN count(n) AS n")[0]["n"]
@@ -29,6 +31,7 @@ def health():
 
 @router.get("/cve/{cve_id}")
 def cve(cve_id: str):
+    """The raw graph record of one CVE, e.g. /cve/CVE-2024-24919."""
     rows = run(queries.CVE_CHAIN, id=cve_id.upper())
     if not rows or rows[0]["cve"] is None:
         raise HTTPException(404, f"{cve_id} not found")
@@ -37,6 +40,7 @@ def cve(cve_id: str):
 
 @router.post("/ask")
 def ask(body: Question):
+    """The whole answer at once, as one JSON object."""
     if not body.question.strip():
         raise HTTPException(400, "question is empty")
     try:
@@ -47,7 +51,7 @@ def ask(body: Question):
 
 @router.post("/ask/stream")
 def ask_stream(body: Question):
-    """Same answer as /ask, sent as one JSON event per line while the model is still writing."""
+    """The answer while it is being written: one JSON event per line, so the website can type it out."""
     if not body.question.strip():
         raise HTTPException(400, "question is empty")
 
@@ -55,8 +59,7 @@ def ask_stream(body: Question):
         try:
             for event in answer_stream(body.question.strip(), body.history):
                 yield json.dumps(event, default=str) + "\n"
-        except Exception as exc:
-            yield json.dumps({"type": "error", "detail": f"API error: {exc}"}) + "\n"
+        except Exception as exc:  # e.g. the AI's daily limit is used up
+            yield json.dumps({"type": "error", "detail": f"The AI could not answer: {exc}"}) + "\n"
 
-    return StreamingResponse(lines(), media_type="application/x-ndjson",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+    return StreamingResponse(lines(), media_type="application/x-ndjson")

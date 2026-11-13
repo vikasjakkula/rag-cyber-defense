@@ -23,7 +23,7 @@ function write(items) {
 }
 
 export function saveEntry(result) {
-  const { live, ...entry } = result;
+  const { typing, ...entry } = result; // don't store the "still writing" flag
   const rest = loadHistory().filter((h) => h.id !== entry.id);
   return write([entry, ...rest].slice(0, LIMIT));
 }

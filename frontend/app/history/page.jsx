@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Backdrop from "../Backdrop";
 import Nav from "../Nav";
 import { clearHistory, loadHistory, removeEntry } from "../history";
-import { useHeadline, useMotion, Words } from "../motion";
+import { useReveal, Words } from "../motion";
 
 const REFUSAL = "I don't have information";
 
@@ -30,9 +30,7 @@ export default function History() {
   const [query, setQuery] = useState("");
   const [confirming, setConfirming] = useState(false);
   const scope = useRef(null);
-  const title = useRef(null);
-  useHeadline(title);
-  useMotion(scope, items);
+  useReveal(scope, items);
   useEffect(() => setItems(loadHistory()), []);
 
   const shown = useMemo(() => {
@@ -69,7 +67,7 @@ export default function History() {
       <Nav current="history" />
       <main className="history" ref={scope}>
         <p className="eyebrow">History · saved in this browser</p>
-        <h1 ref={title}><Words text="Every answer, kept with its evidence" /></h1>
+        <h1><Words text="Every answer, kept with its evidence" /></h1>
         <p className="sub">Each question is saved with the answer, technical explanation, attack paths and grounding check. Reopen any of them instantly, without asking the AI again.</p>
 
         {items && items.length > 0 && (

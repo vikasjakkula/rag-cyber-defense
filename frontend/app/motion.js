@@ -1,92 +1,52 @@
 "use client";
 
-import { Fragment, useLayoutEffect } from "react";
-import gsap from "gsap";
+import { Fragment, useEffect } from "react";
 
-// Shared GSAP animations. Mark elements in JSX and this hook animates them when they come into view:
-//   data-reveal          fades and rises in
-//   data-count="38461"   counts up from 0 to the number (data-suffix="%" adds a suffix)
-//   .hbar-fill / .bar    bars grow from the left, one after another
-//   .trend .line         the line chart draws itself
-// The browser's IntersectionObserver decides when something is visible, so content always appears,
-// even if the page layout changes after the data loads. `ready` is the data the page waits for.
-export function useMotion(scope, ready) {
-  useLayoutEffect(() => {
+// Animations without a library. Mark elements in JSX and this hook plays them when they scroll into view:
+//   data-reveal         the element fades and rises in (CSS does it when the class "shown" is added)
+//   data-count="944"    inside a data-reveal element: the number counts up from 0 (data-suffix="%" adds "%")
+// `ready` is the data the page waits for, so we only start once the content is on the page.
+export function useReveal(scope, ready) {
+  useEffect(() => {
     const root = scope.current;
-    if (!ready || !root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!ready || !root) return;
 
-    const play = new Map(); // element -> animation to run when it becomes visible
-    const ctx = gsap.context(() => {
-      root.querySelectorAll("[data-reveal]").forEach((el) => {
-        gsap.set(el, { y: 36, opacity: 0 });
-        play.set(el, () => gsap.to(el, { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" }));
-      });
-
-      root.querySelectorAll("[data-count]").forEach((el) => {
-        const end = Number(el.dataset.count);
-        const suffix = el.dataset.suffix || "";
-        const decimals = (el.dataset.count.split(".")[1] || "").length;
-        const write = (v) => {
-          el.textContent = v.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix;
-        };
-        write(0);
-        play.set(el, () => {
-          const state = { v: 0 };
-          gsap.to(state, { v: end, duration: 1.8, ease: "power2.out", onUpdate: () => write(state.v), onComplete: () => write(end) });
-        });
-      });
-
-      root.querySelectorAll(".hbars, .vgroups, .bars").forEach((group) => {
-        const fills = group.querySelectorAll(".hbar-fill, .bar");
-        gsap.set(fills, { scaleX: 0, transformOrigin: "left center" });
-        play.set(group, () => gsap.to(fills, { scaleX: 1, duration: 1.1, ease: "expo.out", stagger: 0.06 }));
-      });
-
-      root.querySelectorAll(".trend").forEach((chart) => {
-        const line = chart.querySelector(".line");
-        const area = chart.querySelector(".area");
-        if (!line) return;
-        const len = line.getTotalLength();
-        gsap.set(line, { strokeDasharray: len, strokeDashoffset: len });
-        gsap.set(area, { opacity: 0 });
-        play.set(chart, () => {
-          gsap.to(line, { strokeDashoffset: 0, duration: 2, ease: "power2.inOut" });
-          gsap.to(area, { opacity: 1, duration: 1.4, delay: 0.8 });
-        });
-      });
-    }, root);
-
+    // IntersectionObserver tells us when an element becomes visible on screen
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
-        play.get(entry.target)?.();
-        observer.unobserve(entry.target);
+        entry.target.classList.add("shown");
+        entry.target.querySelectorAll("[data-count]").forEach(countUp);
+        observer.unobserve(entry.target); // play once
       }
     }, { rootMargin: "0px 0px -8% 0px" });
-    play.forEach((_, el) => observer.observe(el));
 
-    return () => {
-      observer.disconnect();
-      ctx.revert();
-    };
+    root.querySelectorAll("[data-reveal]").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, [scope, ready]);
 }
 
-// Splits a heading into words that rise in one after another
-export function useHeadline(ref) {
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const tween = gsap.from(el.querySelectorAll(".word"), {
-      yPercent: 110, opacity: 0, duration: 1, ease: "expo.out", stagger: 0.07, delay: 0.2,
-    });
-    return () => tween.revert();
-  }, [ref]);
+// Counts an element's text from 0 up to its data-count in 1.5 seconds
+function countUp(el) {
+  const end = Number(el.dataset.count);
+  const suffix = el.dataset.suffix || "";
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - start) / 1500);
+    const eased = 1 - (1 - t) ** 3; // fast at first, slow at the end
+    el.textContent = Math.round(end * eased).toLocaleString("en-US") + suffix;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
+// Splits a heading into words; CSS makes each word rise in a little after the one before
 export function Words({ text }) {
-  // The space sits between the masks; inside an inline-block it would collapse
-  return text.split(" ").map((w, i) => (
-    <Fragment key={i}>{i > 0 && " "}<span className="word-mask"><span className="word">{w}</span></span></Fragment>
+  return text.split(" ").map((word, i) => (
+    <Fragment key={i}>
+      {i > 0 && " "}
+      <span className="word-mask"><span className="word" style={{ "--i": i }}>{word}</span></span>
+    </Fragment>
   ));
 }
