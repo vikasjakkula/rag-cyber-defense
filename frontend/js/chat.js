@@ -35,7 +35,7 @@ function createReply(question) {
   const el = document.createElement("section");
   el.className = "reply";
   el.innerHTML = `<p class="bubble">${escapeHtml(question)}</p>
-    <span class="badge" hidden></span>
+    <span class="badge" hidden></span><details class="cypher" hidden><summary>Cypher</summary><pre></pre></details>
     <div class="answer"><div class="skeleton"><span></span><span></span></div></div>
     <p class="grounding" hidden></p><div class="graphs"></div>
     <div class="details" hidden><h2>Technical explanation</h2><div class="details-text"></div></div>
@@ -50,6 +50,11 @@ function createReply(question) {
       badge.textContent = MODES[result.mode] || result.mode;
       badge.className = `badge ${result.mode}`;
       badge.hidden = false;
+      if (result.cypher?.length) {
+        part(".cypher pre").textContent = result.cypher.join("
+");
+        part(".cypher").hidden = false;
+      }
       if (result.not_found?.length) {
         part(".missing").textContent = `Not in the dataset: ${result.not_found.join(", ")}`;
         part(".missing").hidden = false;

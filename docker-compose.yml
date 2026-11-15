@@ -88,8 +88,10 @@ services:
       timeout: 5s
       retries: 12
       start_period: 30s
+    # Starts as soon as the graph is loaded; embed-init keeps embedding in the background (first run takes
+    # several minutes on CPU). Until it finishes, questions without an ID use keyword search.
     depends_on:
-      embed-init:
+      neo4j-init:
         condition: service_completed_successfully
 
   # Plain HTML/CSS/JS, served by nginx. API_URL is written into config.js when the container starts.

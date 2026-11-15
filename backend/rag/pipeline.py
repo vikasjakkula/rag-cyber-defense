@@ -38,6 +38,20 @@ def is_follow_up(question):
     return len(words) <= 12 and any(w in {"it", "its", "it's", "this", "that", "these", "those", "them", "they"} for w in words)
 
 
+# One short line per query we ran, so the website can show the Cypher behind each answer
+SHORT_CYPHER = {
+    "CVE": "MATCH (:CVE {{id:'{id}'}})-[:CVE_CWE]->(:CWE)-[:CWE_CAPEC]->(:CAPEC)-[:CAPEC_ATTACK]->(:ATTACK)",
+    "CWE": "MATCH (:CWE {{id:'{id}'}})-[:CWE_CAPEC]->(:CAPEC)-[:CAPEC_ATTACK]->(:ATTACK)",
+    "CAPEC": "MATCH (:CWE)-[:CWE_CAPEC]->(:CAPEC {{id:'{id}'}})-[:CAPEC_ATTACK]->(:ATTACK)",
+    "T": "MATCH (:CAPEC)-[:CAPEC_ATTACK]->(:ATTACK {{id:'{id}'}})",
+}
+
+
+def short_cypher(entity_id):
+    kind = "T" if entity_id.startswith("T") else entity_id.split("-")[0]
+    return SHORT_CYPHER[kind].format(id=entity_id)
+
+
 def retrieve(question, history=()):
     """Find the graph records the question is about. `mode` says which of the three ways was used."""
     ids = find_ids(question)
@@ -51,7 +65,7 @@ def retrieve(question, history=()):
     # 1. The question names IDs: look each one up directly
     if ids:
         facts = [lookup(entity_id) for entity_id in ids]
-        return {"mode": "id_lookup", "ids": ids,
+        return {"mode": "id_lookup", "ids": ids, "cypher": [short_cypher(i) for i in ids],
                 "facts": [fact for fact in facts if fact],
                 "not_found": [entity_id for entity_id, fact in zip(ids, facts) if not fact]}
 
@@ -60,14 +74,18 @@ def retrieve(question, history=()):
         try:
             facts = hybrid.search(question)
             if facts:
-                return {"mode": "hybrid_vector", "ids": [], "facts": facts, "not_found": []}
+                cypher = [f"CALL db.index.vector.queryNodes('<label>_embedding', {config.VECTOR_TOP_K}, $vector) "
+                          f"WHERE score >= {config.VECTOR_MIN_SCORE}"]
+                cypher += [short_cypher(fact["entry"]["id"]) for fact in facts]
+                return {"mode": "hybrid_vector", "ids": [], "cypher": cypher, "facts": facts, "not_found": []}
         except Exception:
             pass  # e.g. embeddings not built yet: fall back to keyword search
 
     # 3. Fallback: keyword search over names and descriptions. The index treats symbols as syntax, so keep words only.
     words = " ".join(re.findall(r"\w+", question))
     facts = run(queries.KEYWORD_SEARCH, text=words) if words else []
-    return {"mode": "keyword_search", "ids": [], "facts": facts, "not_found": []}
+    cypher = [f"CALL db.index.fulltext.queryNodes('cyber_text', '{words}') LIMIT 8"]
+    return {"mode": "keyword_search", "ids": [], "cypher": cypher, "facts": facts, "not_found": []}
 
 
 def build_messages(prompt, question, retrieved, history=()):
@@ -76,7 +94,7 @@ def build_messages(prompt, question, retrieved, history=()):
     for turn in history[-MAX_TURNS:]:
         messages.append({"role": "user", "content": turn.get("question", "")})
         messages.append({"role": "assistant", "content": turn.get("answer", "")})
-    facts = json.dumps(retrieved, default=str)
+    facts = json.dumps({k: v for k, v in retrieved.items() if k != "cypher"}, default=str)  # the LLM doesn't need the queries
     messages.append({"role": "user", "content": f"Question: {question}\n\nFacts:\n{facts}"})
     return messages
 

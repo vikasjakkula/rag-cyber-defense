@@ -94,8 +94,10 @@ docker compose ps               # all running; neo4j-init and embed-init show "E
 | http://localhost:8000/docs | the API |
 | http://localhost:7474 | Neo4j Browser (user `neo4j`, password `password123`) |
 
-Start order: `neo4j` healthy → `neo4j-init` loads the graph → `embed-init` writes embeddings (skips
-nodes already done) → `backend` → `frontend`. The AI model is cached in a Docker volume.
+Start order: `neo4j` healthy → `neo4j-init` loads the graph → `backend` → `frontend`. At the same time
+`embed-init` writes embeddings in the background (first run: several minutes; later runs skip nodes already
+done). Until it exits, questions without an ID use keyword search. Each answer has a small "Cypher" toggle
+showing the queries that were run. The AI model is cached in a Docker volume.
 
 ```bash
 docker compose exec backend python -m pytest tests -q     # run the tests
