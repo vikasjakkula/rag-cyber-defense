@@ -5,8 +5,8 @@ from graph.connection import run
 # Which tested Cypher query to run for each kind of ID
 QUERY_FOR = {"CVE": queries.CVE_CHAIN, "CWE": queries.CWE_CHAIN, "CAPEC": queries.CAPEC_CHAIN, "T": queries.ATTACK_NODE}
 
-MAX_ITEMS = 40   # longest list of linked records we send to the LLM
-MAX_PATHS = 150  # paths are short strings, so we keep more of them
+MAX_ITEMS = 8   # longest list of linked records we send to the LLM
+MAX_PATHS = 10  # paths are short strings, so we keep more of them
 
 
 def shorten(items, limit):
