@@ -142,7 +142,7 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 | Part | Tool | Why |
 |---|---|---|
 | Website | plain HTML, CSS, JavaScript, served by nginx | no framework, no build step, easy to read |
-| 3D background | three.js (from a CDN) | draws the graph as 9,000 dots in one warm colour on a cream background (no dark mode) |
+| 3D background | three.js (from a CDN) | draws the graph as 9,000 dots in 4 layer colours on a cream background (no dark mode) |
 | API | FastAPI (Python) | fast, simple, auto docs at `/docs` |
 | Graph database | Neo4j + Cypher | follows CVE → CWE → CAPEC → ATT&CK links in one query |
 | Search by meaning | sentence-transformers all-MiniLM-L6-v2 + Neo4j vector indexes | finds records even with different words |

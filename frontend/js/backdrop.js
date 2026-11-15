@@ -1,12 +1,12 @@
 // The background: the knowledge graph drawn as 9,000 dots with three.js (loaded from a CDN, no install).
-// All dots share one warm colour; each shell is one layer of the chain: bugs (CVE) on the outer shell, attacker actions (ATT&CK) at the core.
+// Each colour is one layer of the chain: bugs (CVE) on the outer shell, attacker actions (ATT&CK) at the core.
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js";
 
 const LAYERS = [
-  { color: "#c96442", share: 0.46, shell: 2.15, column: -2.7 }, // CVE: specific bugs
-  { color: "#c96442", share: 0.2, shell: 1.6, column: -0.9 },   // CWE: the coding mistakes
-  { color: "#c96442", share: 0.17, shell: 1.1, column: 0.9 },   // CAPEC: how attacks work
-  { color: "#c96442", share: 0.17, shell: 0.62, column: 2.7 },  // ATT&CK: what attackers do
+  { color: "#f59e0b", share: 0.46, shell: 2.15, column: -2.7 }, // CVE: specific bugs
+  { color: "#ec4899", share: 0.2, shell: 1.6, column: -0.9 },   // CWE: the coding mistakes
+  { color: "#8b5cf6", share: 0.17, shell: 1.1, column: 0.9 },   // CAPEC: how attacks work
+  { color: "#14b8a6", share: 0.17, shell: 0.62, column: 2.7 },  // ATT&CK: what attackers do
 ];
 const COUNT = 9000;
 
