@@ -31,7 +31,8 @@ function collectSources(facts) {
 export default function Answer({ result, brief = false }) {
   const refused = result.answer.startsWith(REFUSAL);
   const lookedUp = result.mode === "id_lookup" && !refused; // the question named a real ID
-  const sources = lookedUp ? collectSources(result.facts) : [];
+  const searched = result.mode === "semantic_search" && !refused; // found by meaning, no ID in the question
+  const sources = lookedUp ? collectSources(result.facts) : searched ? result.facts : [];
   const g = result.grounding;
 
   return (

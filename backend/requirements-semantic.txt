@@ -1,0 +1,2 @@
+# Only for Docker: search by meaning with all-MiniLM-L6-v2 (too big for Vercel, which uses keyword search)
+sentence-transformers>=3.0

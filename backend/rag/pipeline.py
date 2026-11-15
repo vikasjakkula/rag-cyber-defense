@@ -1,7 +1,7 @@
 """How a question becomes an answer, in four steps:
 
 1. find_ids       pull IDs like "CVE-2024-24919" out of the question
-2. retrieve       fetch the matching records from Neo4j (keyword search when there is no ID)
+2. retrieve       fetch the matching records from Neo4j (search by meaning when there is no ID)
 3. stream_llm     send the question and records to the LLM and get its answer back piece by piece
 4. answer_stream  wrap it all as events the website shows as they arrive
 """
@@ -13,6 +13,7 @@ from groq import Groq
 import config
 from graph import queries
 from graph.connection import run
+from rag import semantic
 from rag.grounding import check as grounding_check
 from rag.prompts import DETAILS_PROMPT, REFUSAL, SYSTEM_PROMPT
 
@@ -68,7 +69,16 @@ def retrieve(question, history=()):
                 "facts": [fact for fact in facts if fact],
                 "not_found": [entity_id for entity_id, fact in zip(ids, facts) if not fact]}
 
-    # No ID: search names and descriptions. The search index treats symbols as syntax, so keep words only.
+    # No ID: search by meaning (vector search) when the model is installed, e.g. in Docker
+    if semantic.available():
+        try:
+            hits = semantic.search(question)
+            if hits:
+                return {"mode": "semantic_search", "ids": [], "facts": hits, "not_found": []}
+        except Exception:
+            pass  # embeddings not built yet: fall back to keyword search
+
+    # Otherwise search names and descriptions by keyword. The index treats symbols as syntax, so keep words only.
     words = " ".join(re.findall(r"\w+", question))
     facts = run(queries.KEYWORD_SEARCH, text=words) if words else []
     return {"mode": "keyword_search", "ids": [], "facts": facts, "not_found": []}
