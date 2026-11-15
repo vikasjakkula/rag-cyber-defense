@@ -314,3 +314,35 @@ main.chat { padding-bottom: 170px; }
   [data-reveal] .trend .line { stroke-dashoffset: 0; }
 }
 .pill.id { font-family: ui-monospace, Consolas, monospace; }
+
+/* =========================================================================
+   9. Plain HTML version: helpers, mode badge, dark mode
+   ========================================================================= */
+[hidden] { display: none !important; }
+body { font-family: Inter, system-ui, sans-serif; }
+.muted { color: var(--muted); }
+code { font-size: 0.92em; background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+.reply .answer .skeleton { margin-top: 4px; }
+
+/* How the records were found: ID lookup, search by meaning, or keyword fallback */
+.badge { align-self: flex-start; margin: 0 0 8px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em; }
+.badge.id_lookup { background: #ede9fe; color: #5b21b6; }
+.badge.hybrid_vector { background: #dcfce7; color: #166534; }
+.badge.keyword_search { background: #fef3c7; color: #92400e; }
+
+@media (prefers-color-scheme: dark) {
+  :root { --text: #ececf1; --muted: #a4a9bb; --line: #2e3140; --soft: #23252f; --ink: #ececf1; --accent: #a78bfa; }
+  body, .backdrop-mesh { background-color: #12131a; }
+  .backdrop-mesh { opacity: 0.55; }
+  .ask, .card, .tile, .recent, .topnav, .search, .ghost, .chip, .box { background: #1b1d26; border-color: #2e3140; color: var(--text); }
+  .box { fill: #1b1d26; }
+  .send, .bubble, .new-q, .step, .cta, .topnav .links a[aria-current="page"], .recent-tab, .formula span.result { background: #ececf1; color: #12131a; }
+  .send:disabled { background: #2e3140; color: #6b7080; }
+  .card.error { background: #3a1d1d; color: #fca5a5; }
+  .why { background: #251f3a; color: #ddd6fe; }
+  .grounding.ok { background: #12301f; color: #86efac; }
+  .grounding.warn { background: #33280f; color: #fcd34d; }
+  .badge.id_lookup { background: #2e2350; color: #ddd6fe; }
+  .badge.hybrid_vector { background: #12301f; color: #86efac; }
+  .badge.keyword_search { background: #33280f; color: #fcd34d; }
+}

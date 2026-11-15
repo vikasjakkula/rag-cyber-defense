@@ -1,4 +1,4 @@
-// Saved answers, kept in this browser (localStorage). Each entry is the full result the app showed:
+// Saved answers, kept in this browser (localStorage). Each entry is the full result the page showed:
 // question, answer, technical explanation, grounding check and the graph facts behind them.
 const KEY = "rag-history-v1";
 const LIMIT = 60; // localStorage holds about 5 MB; the oldest entries go first
@@ -22,8 +22,7 @@ function write(items) {
   return [];
 }
 
-export function saveEntry(result) {
-  const { typing, ...entry } = result; // don't store the "still writing" flag
+export function saveEntry(entry) {
   const rest = loadHistory().filter((h) => h.id !== entry.id);
   return write([entry, ...rest].slice(0, LIMIT));
 }

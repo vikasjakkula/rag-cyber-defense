@@ -1,7 +1,7 @@
 """How a question becomes an answer, in four steps:
 
-1. find_ids       pull IDs like "CVE-2024-24919" out of the question
-2. retrieve       fetch the matching records from Neo4j (search by meaning when there is no ID)
+1. find_ids       pull IDs like "CVE-2024-24919" or "CWE 89" out of the question
+2. retrieve       pick the records: ID lookup, or search by meaning (hybrid), or keyword search
 3. stream_llm     send the question and records to the LLM and get its answer back piece by piece
 4. answer_stream  wrap it all as events the website shows as they arrive
 """
@@ -13,72 +13,58 @@ from groq import Groq
 import config
 from graph import queries
 from graph.connection import run
-from rag import semantic
+from rag import embeddings
 from rag.grounding import check as grounding_check
 from rag.prompts import DETAILS_PROMPT, REFUSAL, SYSTEM_PROMPT
+from retrieval import hybrid
+from retrieval.lookup import lookup
 
-# Matches CVE-2024-24919, CWE-79, CAPEC-66 and ATT&CK IDs like T1036 or T1574.008
-ID_PATTERN = re.compile(r"\b(CVE-\d{4}-\d{4,}|CWE-\d+|CAPEC-\d+|T\d{4}(?:\.\d{3})?)\b", re.IGNORECASE)
-
-# Which tested Cypher query to run for each kind of ID
-QUERY_FOR = {"CVE": queries.CVE_CHAIN, "CWE": queries.CWE_CHAIN, "CAPEC": queries.CAPEC_CHAIN, "T": queries.ATTACK_NODE}
-
-MAX_ITEMS = 40   # longest list of linked records we send to the LLM
-MAX_PATHS = 150  # paths are short strings, so we keep more of them
-MAX_TURNS = 6    # earlier questions and answers we send back, so follow-ups make sense
+# CVE-2024-24919, CWE-79 or "CWE 79", CAPEC-66 or "CAPEC 66", and ATT&CK IDs like T1036 or T1574.008
+ID_PATTERN = re.compile(r"\b(CVE[-\s]\d{4}-\d{4,}|CWE[-\s]\d+|CAPEC[-\s]\d+|T\d{4}(?:\.\d{3})?)\b", re.IGNORECASE)
+MAX_TURNS = 6  # earlier questions and answers we send back, so follow-ups make sense
 
 client = Groq(api_key=config.GROQ_API_KEY) if config.GROQ_API_KEY else None
 
 
 def find_ids(text):
-    """'Is CVE-2024-24919 bad?' -> ['CVE-2024-24919'] (each ID once, in upper case)."""
-    return list(dict.fromkeys(match.upper() for match in ID_PATTERN.findall(text)))
+    """'Is cwe 89 bad?' -> ['CWE-89'] (each ID once, upper case, with a dash)."""
+    ids = (re.sub(r"\s", "-", match.upper()) for match in ID_PATTERN.findall(text))
+    return list(dict.fromkeys(ids))
 
 
-def shorten(items, limit):
-    """Cut a long list so the prompt stays small, and say how many were left out."""
-    if isinstance(items, list) and len(items) > limit:
-        return items[:limit] + [f"... {len(items) - limit} more"]
-    return items
-
-
-def lookup(entity_id):
-    """Run the Cypher query for one ID. Returns its record, or None if it is not in the graph."""
-    kind = "T" if entity_id.startswith("T") else entity_id.split("-")[0]
-    rows = run(QUERY_FOR[kind], id=entity_id)
-    if not rows or list(rows[0].values())[0] is None:
-        return None
-    record = rows[0]
-    fact = {key: shorten(value, MAX_PATHS if key == "paths" else MAX_ITEMS) for key, value in record.items()}
-    fact["counts"] = {key: len(value) for key, value in record.items() if isinstance(value, list)}
-    return fact
+def is_follow_up(question):
+    """Short questions that point back with words like "it" or "this" ("how do I fix it?")."""
+    words = re.findall(r"[a-z']+", question.lower())
+    return len(words) <= 12 and any(w in {"it", "its", "it's", "this", "that", "these", "those", "them", "they"} for w in words)
 
 
 def retrieve(question, history=()):
-    """Find the graph records the question is about."""
+    """Find the graph records the question is about. `mode` says which of the three ways was used."""
     ids = find_ids(question)
-    # A follow-up like "how do I fix it?" names no ID, so reuse the IDs from the last turns
-    for turn in reversed(history[-2:]):
-        if ids:
-            break
-        ids = find_ids(turn.get("question", "") + " " + turn.get("answer", ""))[:3]
+    # A follow-up like "how do I fix it?" points back at the last answer: reuse that turn's IDs
+    if not ids and is_follow_up(question):
+        for turn in reversed(history[-2:]):
+            ids = find_ids(turn.get("question", "") + " " + turn.get("answer", ""))[:3]
+            if ids:
+                break
 
+    # 1. The question names IDs: look each one up directly
     if ids:
         facts = [lookup(entity_id) for entity_id in ids]
         return {"mode": "id_lookup", "ids": ids,
                 "facts": [fact for fact in facts if fact],
                 "not_found": [entity_id for entity_id, fact in zip(ids, facts) if not fact]}
 
-    # No ID: search by meaning (vector search) when the model is installed, e.g. in Docker
-    if semantic.available():
+    # 2. No ID: search by meaning, then follow the graph (needs the embedding model, installed in Docker)
+    if embeddings.available():
         try:
-            hits = semantic.search(question)
-            if hits:
-                return {"mode": "semantic_search", "ids": [], "facts": hits, "not_found": []}
+            facts = hybrid.search(question)
+            if facts:
+                return {"mode": "hybrid_vector", "ids": [], "facts": facts, "not_found": []}
         except Exception:
-            pass  # embeddings not built yet: fall back to keyword search
+            pass  # e.g. embeddings not built yet: fall back to keyword search
 
-    # Otherwise search names and descriptions by keyword. The index treats symbols as syntax, so keep words only.
+    # 3. Fallback: keyword search over names and descriptions. The index treats symbols as syntax, so keep words only.
     words = " ".join(re.findall(r"\w+", question))
     facts = run(queries.KEYWORD_SEARCH, text=words) if words else []
     return {"mode": "keyword_search", "ids": [], "facts": facts, "not_found": []}
@@ -126,9 +112,10 @@ def answer_stream(question, history=(), explain=True):
         answer += piece
         yield {"type": "answer", "delta": piece}
 
-    # The technical explanation only makes sense when specific records were looked up
+    # The technical explanation only makes sense when real graph records were found
+    graph_facts = retrieved["mode"] in ("id_lookup", "hybrid_vector") and retrieved["facts"]
     details = ""
-    if explain and retrieved["mode"] == "id_lookup" and retrieved["facts"] and not answer.startswith(REFUSAL):
+    if explain and graph_facts and not answer.startswith(REFUSAL):
         for piece in stream_llm(build_messages(DETAILS_PROMPT, question, retrieved)):
             details += piece
             yield {"type": "details", "delta": piece}
