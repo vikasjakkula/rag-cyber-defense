@@ -51,8 +51,7 @@ function createReply(question) {
       badge.className = `badge ${result.mode}`;
       badge.hidden = false;
       if (result.cypher?.length) {
-        part(".cypher pre").textContent = result.cypher.join("
-");
+        part(".cypher pre").textContent = result.cypher.join("\n");
         part(".cypher").hidden = false;
       }
       if (result.not_found?.length) {
