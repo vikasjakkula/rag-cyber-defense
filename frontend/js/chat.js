@@ -39,7 +39,7 @@ function createReply(question) {
     <div class="answer"><div class="skeleton"><span></span><span></span></div></div>
     <p class="grounding" hidden></p><div class="graphs"></div>
     <div class="details" hidden><h2>Technical explanation</h2><div class="details-text"></div></div>
-    <p class="note missing" hidden></p><div class="sources" hidden></div>`;
+    <p class="note missing" hidden></p><details class="sources" hidden></details>`;
   $("thread").appendChild(el);
   el.scrollIntoView({ behavior: "smooth", block: "start" });
   const part = (selector) => el.querySelector(selector);
@@ -85,11 +85,12 @@ function createReply(question) {
           if (map) part(".graphs").appendChild(map);
         }
       }
-      const sources = collectSources(result);
+      // Sources stay folded until "Sources" is clicked; none for general (keyword) answers
+      const sources = result.mode === "keyword_search" ? [] : collectSources(result);
       if (sources.length) {
         const box = part(".sources");
         box.hidden = false;
-        box.innerHTML = `<h2>Sources <span class="count">${sources.length}</span></h2><ul>${sources.slice(0, 12).map((s) =>
+        box.innerHTML = `<summary><h2>Sources <span class="count">${sources.length}</span></h2></summary><ul>${sources.slice(0, 12).map((s) =>
           `<li><a href="${sourceUrl(s.id)}" target="_blank" rel="noreferrer">${s.id}</a><span>${escapeHtml(s.name)}</span></li>`).join("")}</ul>
           ${sources.length > 12 ? `<p class="note">and ${sources.length - 12} more</p>` : ""}`;
       }
