@@ -13,7 +13,7 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; color: var(--text); background: #fbfaff; font: 16px/1.65 system-ui, sans-serif; }
+body { margin: 0; min-height: 100vh; color: var(--text); background: #f5efe4; font: 16px/1.65 system-ui, sans-serif; }
 html[class] body { font-family: inherit; } /* use the Inter font from layout.jsx */
 button { font: inherit; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -30,12 +30,10 @@ h1 { margin: 0; font-size: clamp(34px, 6vw, 56px); line-height: 1.05; font-weigh
    ========================================================================= */
 .backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
 .backdrop-mesh {
-  position: absolute; inset: 0; background-color: #fbfaff;
+  position: absolute; inset: 0; background-color: #f5efe4;
   background-image:
-    radial-gradient(at 8% 12%, rgba(245, 158, 11, 0.20) 0, transparent 42%),
-    radial-gradient(at 92% 8%, rgba(236, 72, 153, 0.17) 0, transparent 42%),
-    radial-gradient(at 94% 92%, rgba(139, 92, 246, 0.22) 0, transparent 48%),
-    radial-gradient(at 6% 90%, rgba(20, 184, 166, 0.19) 0, transparent 48%);
+    radial-gradient(at 10% 10%, rgba(201, 100, 66, 0.10) 0, transparent 45%),
+    radial-gradient(at 90% 90%, rgba(201, 100, 66, 0.12) 0, transparent 50%);
 }
 .backdrop-gl, .backdrop-gl canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .backdrop-gl { transition: opacity 0.6s; }
@@ -329,20 +327,3 @@ code { font-size: 0.92em; background: var(--soft); padding: 1px 5px; border-radi
 .badge.id_lookup { background: #ede9fe; color: #5b21b6; }
 .badge.hybrid_vector { background: #dcfce7; color: #166534; }
 .badge.keyword_search { background: #fef3c7; color: #92400e; }
-
-@media (prefers-color-scheme: dark) {
-  :root { --text: #ececf1; --muted: #a4a9bb; --line: #2e3140; --soft: #23252f; --ink: #ececf1; --accent: #a78bfa; }
-  body, .backdrop-mesh { background-color: #12131a; }
-  .backdrop-mesh { opacity: 0.55; }
-  .ask, .card, .tile, .recent, .topnav, .search, .ghost, .chip, .box { background: #1b1d26; border-color: #2e3140; color: var(--text); }
-  .box { fill: #1b1d26; }
-  .send, .bubble, .new-q, .step, .cta, .topnav .links a[aria-current="page"], .recent-tab, .formula span.result { background: #ececf1; color: #12131a; }
-  .send:disabled { background: #2e3140; color: #6b7080; }
-  .card.error { background: #3a1d1d; color: #fca5a5; }
-  .why { background: #251f3a; color: #ddd6fe; }
-  .grounding.ok { background: #12301f; color: #86efac; }
-  .grounding.warn { background: #33280f; color: #fcd34d; }
-  .badge.id_lookup { background: #2e2350; color: #ddd6fe; }
-  .badge.hybrid_vector { background: #12301f; color: #86efac; }
-  .badge.keyword_search { background: #33280f; color: #fcd34d; }
-}

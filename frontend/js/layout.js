@@ -11,10 +11,10 @@ function ring(r, seed) {
   return d + "Z";
 }
 const LOGO = `<svg class="logo" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-  <circle cx="16" cy="16" r="15" fill="#fff" stroke="#e6e1f5"/>
-  <g class="logo-rings">${[4, 7.5, 11].map((r, i) => `<path d="${ring(r, i * 0.9)}" fill="none" stroke="#8b5cf6" opacity="0.7"/>`).join("")}</g>
-  <circle cx="22" cy="8" r="1.8" fill="#f59e0b"/><circle cx="9" cy="12" r="1.8" fill="#ec4899"/>
-  <circle cx="23" cy="21" r="1.8" fill="#8b5cf6"/><circle cx="13" cy="23" r="1.8" fill="#14b8a6"/>
+  <circle cx="16" cy="16" r="15" fill="#f5efe4" stroke="#e8dccb"/>
+  <g class="logo-rings">${[4, 7.5, 11].map((r, i) => `<path d="${ring(r, i * 0.9)}" fill="none" stroke="#c96442" opacity="0.7"/>`).join("")}</g>
+  <circle cx="22" cy="8" r="1.8" fill="#c96442"/><circle cx="9" cy="12" r="1.8" fill="#c96442"/>
+  <circle cx="23" cy="21" r="1.8" fill="#c96442"/><circle cx="13" cy="23" r="1.8" fill="#c96442"/>
 </svg>`;
 
 const PAGES = [["ask", "index.html", "Ask"], ["history", "history.html", "History"],
