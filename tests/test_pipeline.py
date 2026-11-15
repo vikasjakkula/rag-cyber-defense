@@ -3,7 +3,7 @@ import pytest
 
 import config
 from rag import embeddings
-from rag.pipeline import answer, find_ids, is_follow_up, retrieve
+from rag.pipeline import answer, find_ids, is_follow_up, is_stats_question, retrieve
 from rag.prompts import REFUSAL
 
 
@@ -37,7 +37,17 @@ def test_vague_question_uses_hybrid_search():
     assert all("paths" in fact or "capecs" in fact or "cwes" in fact for fact in result["facts"])
 
 
-@pytest.mark.skipif(not config.GROQ_API_KEY, reason="no GROQ_API_KEY")
+@pytest.mark.skipif(not config.GEMINI_API_KEY, reason="no GEMINI_API_KEY")
 def test_off_topic_question_is_refused():
     result = answer("Who won the 2023 cricket World Cup?", explain=False)
     assert result["answer"].startswith(REFUSAL)
+
+
+def test_count_questions_use_exact_graph_totals():
+    assert is_stats_question("Total no.of nodes and connections")
+    assert not is_stats_question("how do attackers steal login sessions?")
+    stats = retrieve("How many nodes and relationships are in the graph?")
+    assert stats["mode"] == "graph_stats"
+    facts = stats["facts"][0]
+    assert facts["total_nodes"] == sum(facts["nodes_by_type"].values()) > 40000
+    assert facts["total_relationships"] == sum(facts["relationships_by_type"].values()) > 40000

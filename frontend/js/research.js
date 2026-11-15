@@ -63,7 +63,7 @@ function render(report) {
       <ul class="steps">
         <li>${report.questions} questions is a pilot; the plan is 150 across more question types.</li>
         <li>Every question names an ID, the case our retrieval handles best. Questions with no ID (semantic search) are not scored yet.</li>
-        <li>Answer times include waits for the free Groq rate limit; a paid tier would be much faster.</li>
+        <li>Answer times include waits for the free Groq rate limit (this run used Groq; the app now uses Gemini).</li>
         <li>Data covers CVEs published in 2024 only.</li>
       </ul>
       <p class="note">Run on ${escapeHtml(report.run_at)} · ${escapeHtml(report.model)} · reasoning effort ${escapeHtml(report.reasoning_effort)}</p>

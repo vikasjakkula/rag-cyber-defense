@@ -50,3 +50,9 @@ RETURN labels(node)[0] AS type, node.id AS id, node.name AS name,
        left(node.description, 300) AS description, round(score, 2) AS score
 LIMIT 8
 """
+
+# For "how many ..." questions about the whole graph: exact counts, computed by Neo4j
+NODE_COUNTS = "MATCH (n) RETURN labels(n)[0] AS label, count(*) AS count ORDER BY count DESC"
+RELATIONSHIP_COUNTS = "MATCH ()-[r]->() RETURN type(r) AS type, count(*) AS count ORDER BY count DESC"
+SEVERITY_COUNTS = "MATCH (c:CVE) RETURN coalesce(c.severity, 'NONE') AS severity, count(*) AS count ORDER BY count DESC"
+FULL_CHAINS = "MATCH (:CVE)-[:CVE_CWE]->(:CWE)-[:CWE_CAPEC]->(:CAPEC)-[:CAPEC_ATTACK]->(:ATTACK) RETURN count(*) AS count"

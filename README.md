@@ -44,7 +44,7 @@ Does it name an ID? (CVE-…, CWE-89 or "CWE 89", CAPEC-…, T1234)
                     └── nothing close enough (score < 0.65) ─► Keyword fallback (full-text search)
      │
      ▼
-The records + your question go to the AI (Groq, gpt-oss-120b) with strict rules:
+The records + your question go to the AI (Google Gemini, gemini-2.5-flash) with strict rules:
 answer in ≤ 5 short lines, use only these facts, never invent IDs.
      │
      ▼
@@ -83,7 +83,7 @@ Everything else is looks (`style.css`, `backdrop.js` = the 3D dots) or one-time 
 ## 4. Run it (Docker)
 
 ```bash
-cp .env.example .env            # then put your free Groq key in GROQ_API_KEY
+cp .env.example .env            # then put your Gemini key in GEMINI_API_KEY
 docker compose up --build -d    # first run ~15 min: loads the graph, then writes embeddings
 docker compose ps               # all running; neo4j-init and embed-init show "Exited (0)" = done
 ```
@@ -105,7 +105,7 @@ curl -X POST localhost:8000/ask -H "Content-Type: application/json" \
      -d '{"question":"how do attackers steal login sessions?"}'
 ```
 
-Settings in `.env`: `GROQ_API_KEY`, `GROQ_MODEL`, `EMBEDDING_MODEL`, `VECTOR_TOP_K` (5), `VECTOR_MIN_SCORE` (0.65).
+Settings in `.env`: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EMBEDDING_MODEL`, `VECTOR_TOP_K` (5), `VECTOR_MIN_SCORE` (0.65).
 
 Online: the same frontend and backend run on Vercel with Neo4j Aura. Vercel is too small for the
 embedding model, so online questions without an ID use keyword search.
@@ -148,7 +148,7 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 | API | FastAPI (Python) | fast, simple, auto docs at `/docs` |
 | Graph database | Neo4j + Cypher | follows CVE → CWE → CAPEC → ATT&CK links in one query |
 | Search by meaning | sentence-transformers all-MiniLM-L6-v2 + Neo4j vector indexes | finds records even with different words |
-| AI | Groq, `openai/gpt-oss-120b` | fast, free tier |
+| AI | Google Gemini, `gemini-2.5-flash` | fast, called through its OpenAI-compatible API |
 | Run / host | Docker Compose locally; Vercel + Neo4j Aura online | |
 
 ---
@@ -157,7 +157,7 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 
 - Data covers CVEs published in 2024 only.
 - The 50-question test only uses questions that name an ID; semantic search is not scored yet.
-- Groq's free tier allows about 200,000 tokens a day; long answers can wait on its rate limit.
+- The Gemini API has rate limits per key; the eval numbers were measured earlier with Groq gpt-oss-120b.
 - Online (Vercel) questions without an ID use keyword search, not semantic search.
 
 ## 9. Roadmap

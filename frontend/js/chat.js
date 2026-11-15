@@ -12,7 +12,7 @@ const EXAMPLES = [
 ];
 const REFUSAL = "I don't have information";
 // How the records were found, shown as a small badge on every answer
-const MODES = { id_lookup: "ID lookup", hybrid_vector: "Semantic search", keyword_search: "Keyword fallback" };
+const MODES = { id_lookup: "ID lookup", graph_stats: "Graph totals", hybrid_vector: "Semantic search", keyword_search: "Keyword fallback" };
 
 const $ = (id) => document.getElementById(id);
 let thread = [];      // finished answers in this chat (the last 6 go back to the AI for follow-ups)
@@ -79,7 +79,7 @@ function createReply(question) {
           ? `Not found in the graph: ${g.unsupported.join(", ")}`
           : `Verified: all ${g.supported.length} IDs and scores in this answer are in the graph.`;
       }
-      if (result.mode !== "keyword_search") {
+      if (result.mode === "id_lookup" || result.mode === "hybrid_vector") {
         for (const fact of (result.facts || []).slice(0, 2)) {
           const map = attackGraph(fact);
           if (map) part(".graphs").appendChild(map);

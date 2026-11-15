@@ -1,14 +1,14 @@
 """How a question becomes an answer, in four steps:
 
 1. find_ids       pull IDs like "CVE-2024-24919" or "CWE 89" out of the question
-2. retrieve       pick the records: ID lookup, or search by meaning (hybrid), or keyword search
+2. retrieve       pick the records: ID lookup, graph totals, search by meaning (hybrid), or keyword search
 3. stream_llm     send the question and records to the LLM and get its answer back piece by piece
 4. answer_stream  wrap it all as events the website shows as they arrive
 """
 import json
 import re
 
-from groq import Groq
+from openai import OpenAI
 
 import config
 from graph import queries
@@ -21,9 +21,15 @@ from retrieval.lookup import lookup
 
 # CVE-2024-24919, CWE-79 or "CWE 79", CAPEC-66 or "CAPEC 66", and ATT&CK IDs like T1036 or T1574.008
 ID_PATTERN = re.compile(r"\b(CVE[-\s]\d{4}-\d{4,}|CWE[-\s]\d+|CAPEC[-\s]\d+|T\d{4}(?:\.\d{3})?)\b", re.IGNORECASE)
+# "How many nodes / CVEs / connections ...?" -> exact counts from the whole graph
+COUNT_WORDS = re.compile(r"\b(how many|total|count|number of|no\.? ?of|size|stats|statistics)\b", re.IGNORECASE)
+GRAPH_WORDS = re.compile(r"\b(nodes?|connections?|relationships?|edges?|links?|graph|data|dataset|cves?|cwes?|"
+                         r"capecs?|techniques?|att&ck|vulnerabilit(?:y|ies)|weakness(?:es)?|severity|critical|chains?|paths?)\b",
+                         re.IGNORECASE)
 MAX_TURNS = 6  # earlier questions and answers we send back, so follow-ups make sense
 
-client = Groq(api_key=config.GROQ_API_KEY) if config.GROQ_API_KEY else None
+client = (OpenAI(api_key=config.GEMINI_API_KEY, base_url=config.GEMINI_BASE_URL)
+          if config.GEMINI_API_KEY else None)
 
 
 def find_ids(text):
@@ -52,6 +58,23 @@ def short_cypher(entity_id):
     return SHORT_CYPHER[kind].format(id=entity_id)
 
 
+def is_stats_question(question):
+    """'Total no. of nodes and connections' -> True. Only for questions about the graph as a whole."""
+    return bool(COUNT_WORDS.search(question) and GRAPH_WORDS.search(question))
+
+
+def graph_stats():
+    """Exact totals from Neo4j, already added up, so the LLM never has to count or guess."""
+    nodes = run(queries.NODE_COUNTS)
+    relationships = run(queries.RELATIONSHIP_COUNTS)
+    return {"total_nodes": sum(r["count"] for r in nodes),
+            "nodes_by_type": {r["label"]: r["count"] for r in nodes},
+            "total_relationships": sum(r["count"] for r in relationships),
+            "relationships_by_type": {r["type"]: r["count"] for r in relationships},
+            "cves_by_severity": {r["severity"]: r["count"] for r in run(queries.SEVERITY_COUNTS)},
+            "full_chains_cve_to_attack": run(queries.FULL_CHAINS)[0]["count"]}
+
+
 def retrieve(question, history=()):
     """Find the graph records the question is about. `mode` says which of the three ways was used."""
     ids = find_ids(question)
@@ -69,7 +92,12 @@ def retrieve(question, history=()):
                 "facts": [fact for fact in facts if fact],
                 "not_found": [entity_id for entity_id, fact in zip(ids, facts) if not fact]}
 
-    # 2. No ID: search by meaning, then follow the graph (needs the embedding model, installed in Docker)
+    # 2. "How many ...?" about the whole graph: exact counts, never estimated from a few search results
+    if is_stats_question(question):
+        return {"mode": "graph_stats", "ids": [], "facts": [graph_stats()], "not_found": [],
+                "cypher": [queries.NODE_COUNTS, queries.RELATIONSHIP_COUNTS, queries.SEVERITY_COUNTS, queries.FULL_CHAINS]}
+
+    # 3. No ID: search by meaning, then follow the graph (needs the embedding model, installed in Docker)
     if embeddings.available():
         try:
             facts = hybrid.search(question)
@@ -81,7 +109,7 @@ def retrieve(question, history=()):
         except Exception:
             pass  # e.g. embeddings not built yet: fall back to keyword search
 
-    # 3. Fallback: keyword search over names and descriptions. The index treats symbols as syntax, so keep words only.
+    # 4. Fallback: keyword search over names and descriptions. The index treats symbols as syntax, so keep words only.
     words = " ".join(re.findall(r"\w+", question))
     facts = run(queries.KEYWORD_SEARCH, text=words) if words else []
     cypher = [f"CALL db.index.fulltext.queryNodes('cyber_text', '{words}') LIMIT 8"]
@@ -101,12 +129,11 @@ def build_messages(prompt, question, retrieved, history=()):
 
 def stream_llm(messages):
     """Yield the LLM's answer in small pieces while it is still writing."""
-    # gpt-oss "thinks" before answering; low effort is faster, and we don't need the thinking text back
-    thinking = ({"reasoning_effort": config.GROQ_REASONING_EFFORT, "include_reasoning": False}
-                if config.GROQ_REASONING_EFFORT else {})
+    # Gemini "thinks" before answering; low effort is faster
+    thinking = {"reasoning_effort": config.GEMINI_REASONING_EFFORT} if config.GEMINI_REASONING_EFFORT else {}
     for attempt in range(2):  # now and then the model sends nothing, so try once more
         stream = client.chat.completions.create(
-            model=config.GROQ_MODEL, messages=messages, temperature=0.1, stream=True, **thinking)
+            model=config.GEMINI_MODEL, messages=messages, temperature=0.1, stream=True, **thinking)
         sent_something = False
         for chunk in stream:
             piece = chunk.choices[0].delta.content if chunk.choices else None
@@ -122,7 +149,7 @@ def answer_stream(question, history=(), explain=True):
     retrieved = retrieve(question, history)
     yield {"type": "facts", **retrieved}
     if client is None:
-        yield {"type": "error", "detail": "The AI is not set up yet (GROQ_API_KEY is missing)."}
+        yield {"type": "error", "detail": "The AI is not set up yet (GEMINI_API_KEY is missing)."}
         return
 
     answer = ""

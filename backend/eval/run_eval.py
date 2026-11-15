@@ -15,7 +15,7 @@ import time
 from pathlib import Path
 
 from eval import tls  # noqa: F401
-from groq import Groq
+from openai import OpenAI
 
 import config
 from rag import pipeline
@@ -33,11 +33,10 @@ TARGET = {"cve_to_cwe": "CWE-", "cwe_to_capec": "CAPEC-", "capec_to_attack": "T"
 
 
 def ask_plain(question):
-    client = Groq(api_key=config.GROQ_API_KEY, max_retries=0)  # with_retry waits, so latency stays clean
-    reasoning = ({"reasoning_effort": config.GROQ_REASONING_EFFORT, "include_reasoning": False}
-                 if config.GROQ_REASONING_EFFORT else {})
+    client = OpenAI(api_key=config.GEMINI_API_KEY, base_url=config.GEMINI_BASE_URL, max_retries=0)  # with_retry waits
+    reasoning = {"reasoning_effort": config.GEMINI_REASONING_EFFORT} if config.GEMINI_REASONING_EFFORT else {}
     response = client.chat.completions.create(
-        model=config.GROQ_MODEL, temperature=0.1, **reasoning,
+        model=config.GEMINI_MODEL, temperature=0.1, **reasoning,
         messages=[{"role": "system", "content": PLAIN_PROMPT}, {"role": "user", "content": question}])
     return (response.choices[0].message.content or "").strip()
 
@@ -47,7 +46,7 @@ def ask_graphrag(question):
 
 
 def with_retry(fn, question):
-    """Groq's free tier rate-limits; wait and retry instead of failing the run."""
+    """The API rate-limits; wait and retry instead of failing the run."""
     for attempt in range(6):
         try:
             start = time.perf_counter()
@@ -124,7 +123,7 @@ def main(limit=None, rescore=False):
             rows.append(row)
             print(f"[{n}/{len(items)}] {item['type']:<16} rag={row['graphrag']['accuracy']:.2f} "
                   f"plain={row['plain_llm']['accuracy']:.2f}", flush=True)
-        meta = {"model": config.GROQ_MODEL, "reasoning_effort": config.GROQ_REASONING_EFFORT,
+        meta = {"model": config.GEMINI_MODEL, "reasoning_effort": config.GEMINI_REASONING_EFFORT,
                 "run_at": time.strftime("%Y-%m-%d %H:%M")}
 
     report = {
