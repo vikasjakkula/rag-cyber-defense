@@ -2,6 +2,7 @@
 FROM nginx:alpine
 COPY . /usr/share/nginx/html
 # Writes API_URL into config.js every time the container starts (nginx runs scripts in this folder)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY 40-api-url.sh /docker-entrypoint.d/40-api-url.sh
 RUN chmod +x /docker-entrypoint.d/40-api-url.sh \
- && rm /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/40-api-url.sh /usr/share/nginx/html/.dockerignore
+ && rm /usr/share/nginx/html/Dockerfile /usr/share/nginx/html/40-api-url.sh /usr/share/nginx/html/.dockerignore /usr/share/nginx/html/nginx.conf /usr/share/nginx/html/vercel.json
