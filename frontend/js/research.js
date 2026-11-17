@@ -14,6 +14,7 @@ const TYPES = {
   cwe_to_capec: "Attack patterns (CAPEC) for a CWE",
   capec_to_attack: "ATT&CK techniques for a CAPEC",
   cve_count: "Number of CVEs linked to a CWE",
+  semantic: "No ID: find the attack from a plain description",
 };
 const pct = (x) => `${Math.round(x * 100)}%`;
 const truthText = (row) => (row.type === "severity" ? `${row.truth.severity}, ${row.truth.base_score}`
@@ -62,7 +63,7 @@ function render(report) {
       <h2>Limits, honestly</h2>
       <ul class="steps">
         <li>${report.questions} questions is a pilot; the plan is 150 across more question types.</li>
-        <li>Every question names an ID, the case our retrieval handles best. Questions with no ID (semantic search) are not scored yet.</li>
+        <li>The no-ID questions reuse the first sentence of a CAPEC description, so they are easier than real user wording.</li>
         <li>Answer times include waits for the free Groq rate limit (this run used Groq; the app now uses Gemini).</li>
         <li>Data covers CVEs published in 2024 only.</li>
       </ul>

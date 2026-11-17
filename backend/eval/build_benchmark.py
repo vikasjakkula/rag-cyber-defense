@@ -41,15 +41,25 @@ TYPES = {
         "cypher": """MATCH (w:CWE)<-[:CVE_CWE]-(c:CVE) WITH w, count(c) AS truth WHERE truth >= 2
                      RETURN w.id AS id, truth ORDER BY rand() LIMIT $n""",
     },
+    # No ID in the question: the attack is described in plain words and the right CAPEC must be found.
+    # Tests search by meaning (all-MiniLM-L6-v2 + vector index), the case users without IDs depend on.
+    "semantic": {
+        "question": "Which attack pattern is this: {text}",
+        "cypher": """MATCH (p:CAPEC) WHERE size(p.description) > 80
+                     WITH p, split(p.description, '. ')[0] AS text WHERE size(text) > 60 AND size(text) < 300
+                     RETURN p.id AS id, [p.id] AS truth, text ORDER BY rand() LIMIT $n""",
+        "count": 20,
+    },
 }
 
 
 def build(per_type):
     items = []
     for kind, spec in TYPES.items():
-        for row in run(spec["cypher"], n=per_type):
+        for row in run(spec["cypher"], n=spec.get("count", per_type)):
+            question = spec["question"].format(id=row["id"], text=row.get("text", "").rstrip(".") + "?")
             items.append({"id": f"{kind}-{len(items) + 1:03d}", "type": kind, "entity": row["id"],
-                          "question": spec["question"].format(id=row["id"]), "truth": row["truth"]})
+                          "question": question, "truth": row["truth"]})
     return items
 
 

@@ -70,6 +70,9 @@ def score(item, text):
     if kind == "cve_count":
         numbers = {int(n) for n in re.findall(r"(?<![\w.-])(\d{1,6})(?![\w.])", text.replace(",", ""))}
         return {"accuracy": float(truth in numbers), "precision": None, "recall": None, "invented": []}
+    if kind == "semantic":  # right if the answer names the described attack pattern
+        said = {m.upper() for m in ID.findall(text)}
+        return {"accuracy": float(truth[0] in said), "precision": None, "recall": None, "invented": []}
     prefix = TARGET[kind]
     said = {m.upper() for m in ID.findall(text)}
     said = {i for i in said if i.startswith(prefix) and not (prefix == "T" and i.startswith("CVE"))}
