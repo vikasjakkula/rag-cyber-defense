@@ -125,10 +125,10 @@ embedding model, so online questions without an ID use keyword search.
 
 The paper showed 4 examples and **no numbers**. We measured it (`backend/eval/`, shown on the Research page):
 
-| 50 questions with answers taken from the graph | GraphRAG (ours) | Same AI, no graph |
+| 70 questions (20 with no ID), answers from the graph, Gemini | GraphRAG (ours) | Same AI, no graph |
 |---|---|---|
-| Accuracy | 100% | 7% |
-| Invented (hallucinated) IDs | 0% | 66% |
+| Accuracy | 97% | 3% |
+| Invented (hallucinated) IDs | 0% | 74% |
 
 **Fix-first score** (`backend/analytics/`, Insights page) ranks which bugs to patch first:
 `100 × (CVSS ÷ 10) × (exploitability ÷ 3.9) × (0.5 + 0.5 × reachable ATT&CK techniques ÷ 10)`.
@@ -156,7 +156,7 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 ## 8. Known limitations
 
 - Data covers CVEs published in 2024 only.
-- The 50-question test only uses questions that name an ID; semantic search is not scored yet.
+- The 20 no-ID questions reuse a CAPEC description sentence, so they are easier than real user wording (90% found).
 - The Gemini API has rate limits per key; the eval numbers were measured earlier with Groq gpt-oss-120b.
 - Online (Vercel) questions without an ID use keyword search, not semantic search.
 
@@ -167,7 +167,7 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 - [x] Embeddings on every node (all-MiniLM-L6-v2)
 - [x] Hybrid retrieval: vector search + graph expansion
 - [x] Measured accuracy and hallucination; KEV-tested Fix-first score
-- [ ] 150-question benchmark including questions without IDs
+- [ ] 150-question benchmark with real user wording
 - [ ] EPSS scores and MITRE D3FEND defences in the graph
 - [ ] All CVE years and a weekly NVD update
 
