@@ -1,5 +1,5 @@
 """Grounding check: is every ID and score in the answer really in the retrieved records?
-
+ 
 A claim here is any security ID (CVE-..., CWE-..., CAPEC-..., T1234) or decimal score (8.6) in
 the answer text. It is "supported" if the same ID or number appears in the facts Neo4j returned,
 so the reader can see at a glance whether the AI added anything the graph does not contain.
