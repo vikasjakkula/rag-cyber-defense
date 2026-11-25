@@ -105,14 +105,48 @@ curl -X POST localhost:8000/ask -H "Content-Type: application/json" \
      -d '{"question":"how do attackers steal login sessions?"}'
 ```
 
-Settings in `.env`: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EMBEDDING_MODEL`, `VECTOR_TOP_K` (5), `VECTOR_MIN_SCORE` (0.65).
+Settings in `.env`: `GEMINI_API_KEY`, `GEMINI_MODEL`, `EMBEDDING_MODEL`, `VECTOR_TOP_K` (5), `VECTOR_MIN_SCORE` (0.65),
+`NVD_API_KEY`, `NVD_START_YEAR` (2024), `UPDATE_EVERY_HOURS` (24).
 
 Online: the same frontend and backend run on Vercel with Neo4j Aura. Vercel is too small for the
 embedding model, so online questions without an ID use keyword search.
 
 ---
 
-## 5. The data
+## 5. Auto-update: the data stays current (branch `auto-update`)
+
+The graph no longer stops at 2024. A small script pulls the newest public data by itself.
+
+**What happens, simply:** every 24 hours the Docker service `updater` asks NVD for every CVE added or
+changed since its last run, downloads the latest CWE, CAPEC and ATT&CK files from MITRE, and adds them to
+our own Neo4j graph. New nodes get embeddings and attack-path numbers, and the website shows
+"N CVEs · data updated <date>" under the title. Nothing is deleted, so the 2024 baseline stays.
+
+| File | What changed |
+|---|---|
+| `neo4j/update_data.py` | **new**: the updater. 1) MITRE CWE/CAPEC/ATT&CK files → upsert nodes and links, 2) NVD API 2.0 → upsert CVEs and CVE→CWE links (first run: everything published since `NVD_START_YEAR`; later: only what changed), 3) attack-path metrics + embeddings for new nodes, 4) saves the date on a `(:Meta)` node |
+| `docker-compose.yml` | **new `updater` service**: starts after the graph is loaded, runs the update, then repeats every `UPDATE_EVERY_HOURS` |
+| `backend/api/routes.py` | **new `/meta`** endpoint: last update date and CVE count |
+| `backend/graph/queries.py`, `backend/rag/pipeline.py` | "how many" answers now say when the data was last updated, and ignore the `Meta` node in counts |
+| `frontend/index.html`, `frontend/js/chat.js`, `frontend/style.css` | the green "data updated" line under the title |
+| `.env.example` | `NVD_API_KEY` (optional, free, ~10× faster), `NVD_START_YEAR` (2024), `UPDATE_EVERY_HOURS` (24) |
+| `tests/test_update.py` | **new** test: an NVD record is read into the right scores and CWE links |
+
+```bash
+docker compose up --build -d          # everything, including the updater
+docker compose logs -f updater        # watch it download and add data
+docker compose run --rm updater python /scripts/update_data.py   # one update right now
+```
+
+Why local only: Neo4j Aura's free tier is limited to 200k nodes, and two+ years of CVEs pass that. A local
+Neo4j in Docker has no limit and no cost. The Vercel site (branch `main`) keeps the 2024 data.
+
+**In one line for a review:** "Our system checks NVD and MITRE every day and adds new vulnerabilities to our
+own knowledge graph automatically, so answers stay current with no manual downloads and no paid cloud."
+
+---
+
+## 6. The data
 
 - 38,461 CVEs (2024) · 944 CWEs · 559 CAPECs · 697 ATT&CK techniques = **40,661 nodes**, **44,045 links**
 - 7 link types: `CVE_CWE`, `CWE_CAPEC`, `CAPEC_ATTACK`, `CWE_CHILD`, `CAPEC_CHILD`, `CAN_PRECEDE`, `SUBTECHNIQUE_OF`
@@ -121,7 +155,7 @@ embedding model, so online questions without an ID use keyword search.
 
 ---
 
-## 6. What we added to the paper (our results)
+## 7. What we added to the paper (our results)
 
 The paper showed 4 examples and **no numbers**. We measured it (`backend/eval/`, shown on the Research page):
 
@@ -139,7 +173,7 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 
 ---
 
-## 7. Tech stack
+## 8. Tech stack
 
 | Part | Tool | Why |
 |---|---|---|
@@ -153,14 +187,14 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 
 ---
 
-## 8. Known limitations
+## 9. Known limitations
 
-- Data covers CVEs published in 2024 only.
+- The Vercel site (branch `main`) has 2024 CVEs only; the local auto-update branch keeps 2024 onwards current.
 - The 20 no-ID questions reuse a CAPEC description sentence, so they are easier than real user wording (90% found).
 - The Gemini API has rate limits per key; the eval numbers were measured earlier with Groq gpt-oss-120b.
 - Online (Vercel) questions without an ID use keyword search, not semantic search.
 
-## 9. Roadmap
+## 10. Roadmap
 
 - [x] Knowledge graph of CVE, CWE, CAPEC and ATT&CK in Neo4j
 - [x] ID lookup with tested Cypher queries
@@ -169,7 +203,8 @@ Also new: search by meaning, the "Verified" check on every answer, streaming cha
 - [x] Measured accuracy and hallucination; KEV-tested Fix-first score
 - [ ] 150-question benchmark with real user wording
 - [ ] EPSS scores and MITRE D3FEND defences in the graph
-- [ ] All CVE years and a weekly NVD update
+- [x] Daily automatic update from the NVD API and MITRE (local Docker)
+- [ ] All CVE years (set `NVD_START_YEAR=1999`; needs more disk and a longer first run)
 
 ---
 

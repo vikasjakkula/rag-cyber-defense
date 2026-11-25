@@ -2,6 +2,7 @@
 #   website  http://localhost:3000     API  http://localhost:8000/docs     Neo4j  http://localhost:7474
 #
 # Start order: neo4j healthy -> neo4j-init loads the graph -> embed-init writes embeddings -> backend -> frontend.
+# Then "updater" keeps the data current from NVD and MITRE every 24 hours (neo4j/update_data.py).
 # Settings come from .env (copy .env.example to .env and add your GEMINI_API_KEY).
 
 services:
@@ -64,6 +65,27 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
+  # Keeps the data fresh: pulls new CVEs from the NVD API and the latest CWE, CAPEC and ATT&CK from MITRE,
+  # adds them to the graph, then repeats every UPDATE_EVERY_HOURS. Runs in the background; the site works meanwhile.
+  updater:
+    build: ./backend
+    command: ["python", "/scripts/update_data.py", "--loop"]
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${LOCAL_NEO4J_PASSWORD:-password123}
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      NVD_START_YEAR: ${NVD_START_YEAR:-2024}
+      UPDATE_EVERY_HOURS: ${UPDATE_EVERY_HOURS:-24}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
+    volumes:
+      - ./neo4j:/scripts:ro
+      - hf_cache:/root/.cache/huggingface
+    depends_on:
+      embed-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
   backend:
     build: ./backend
     ports:
@@ -82,6 +104,7 @@ services:
     volumes:
       - hf_cache:/root/.cache/huggingface
       - ./tests:/app/tests:ro   # so the tests can run inside: docker compose exec backend python -m pytest tests -q
+      - ./neo4j:/scripts:ro     # lets the tests check the auto-updater too
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s

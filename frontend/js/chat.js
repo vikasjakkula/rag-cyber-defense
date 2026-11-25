@@ -213,6 +213,14 @@ $("examples").addEventListener("click", (e) => { if (e.target.matches(".chip")) 
 $("q").addEventListener("input", updateButton);
 $("ask").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").value); });
 
+// "Data updated ..." line: when the auto-updater last pulled new CVEs from NVD and MITRE
+fetch(`${window.API_URL}/meta`).then((r) => (r.ok ? r.json() : null)).then((m) => {
+  if (!m) return;
+  const when = m.last_update ? new Date(m.last_update).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
+  $("freshness").textContent = `${Number(m.cves).toLocaleString("en-US")} CVEs` + (when ? ` · data updated ${when}` : " · 2024 baseline");
+  $("freshness").hidden = false;
+}).catch(() => {});
+
 // index.html?h=<id> (links from the History page) opens that saved answer
 const openId = new URLSearchParams(location.search).get("h");
 const saved = openId && loadHistory().find((h) => String(h.id) === openId);

@@ -72,7 +72,8 @@ def graph_stats():
             "total_relationships": sum(r["count"] for r in relationships),
             "relationships_by_type": {r["type"]: r["count"] for r in relationships},
             "cves_by_severity": {r["severity"]: r["count"] for r in run(queries.SEVERITY_COUNTS)},
-            "full_chains_cve_to_attack": run(queries.FULL_CHAINS)[0]["count"]}
+            "full_chains_cve_to_attack": run(queries.FULL_CHAINS)[0]["count"],
+            "data_last_updated": (run(queries.DATA_FRESHNESS) or [{}])[0].get("last_update")}
 
 
 def retrieve(question, history=()):

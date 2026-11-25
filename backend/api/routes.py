@@ -29,6 +29,14 @@ def health():
         raise HTTPException(503, f"Neo4j unavailable: {exc}")
 
 
+@router.get("/meta")
+def meta():
+    """When the data was last refreshed from NVD and MITRE, and how many CVEs the graph holds."""
+    rows = run(queries.DATA_FRESHNESS)
+    cves = run("MATCH (c:CVE) RETURN count(c) AS n")[0]["n"]
+    return {"last_update": rows[0]["last_update"] if rows else None, "cves": cves}
+
+
 @router.get("/cve/{cve_id}")
 def cve(cve_id: str):
     """The raw graph record of one CVE, e.g. /cve/CVE-2024-24919."""
