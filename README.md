@@ -73,7 +73,7 @@ The page shows which way was used as a badge: **ID lookup**, **Semantic search**
 | `backend/rag/grounding.py` | the "Verified" check |
 | `neo4j/*.cypher`, `neo4j/embed_nodes.py` | build the graph, then write an embedding on every node |
 | `frontend/js/graph.js` | the attack path map under an answer |
-| `frontend/insights.html`, `research.html`, `history.html` | charts, our test results, saved answers |
+| `frontend/insights.html`, `history.html` | charts, saved answers |
 | `tests/test_pipeline.py` | checks the routing, semantic search and off-topic refusal |
 
 Everything else is looks (`style.css`, `backdrop.js` = the 3D dots) or one-time data scripts.
@@ -157,7 +157,7 @@ own knowledge graph automatically, so answers stay current with no manual downlo
 
 ## 7. What we added to the paper (our results)
 
-The paper showed 4 examples and **no numbers**. We measured it (`backend/eval/`, shown on the Research page):
+The paper showed 4 examples and **no numbers**. We measured it (`backend/eval/`, results in `data/eval/results.json`):
 
 | 70 questions (20 with no ID), answers from the graph, Gemini | GraphRAG (ours) | Same AI, no graph |
 |---|---|---|

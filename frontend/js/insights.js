@@ -6,11 +6,6 @@ import { renderNav, reveal, splitWords } from "./layout.js";
 const INK = "#4f46e5";
 // Severity is ordered, so it uses one hue from light to dark
 const SEVERITY = [["LOW", "#c7d2fe"], ["MEDIUM", "#818cf8"], ["HIGH", "#4f46e5"], ["CRITICAL", "#312e81"]];
-const RANKERS = [
-  { key: "fix_first", label: "Our Fix-first score", color: "#4f46e5" },
-  { key: "cvss_only", label: "CVSS score alone", color: "#f59e0b" },
-  { key: "random", label: "Random order", color: "#9ca3af" },
-];
 
 // A numbered card: what it shows, the chart, and why it matters
 const panel = (step, title, what, body, why, wide = false) => `
@@ -61,19 +56,6 @@ function hookTrend(el) {
   });
 }
 
-// How many really exploited bugs each ranking puts in its top 100 / 500 / 1,000
-function validation(v) {
-  const cuts = ["100", "500", "1000"];
-  const top = Math.max(...cuts.flatMap((c) => RANKERS.map((r) => v[r.key][c])));
-  return `<div class="legend">${RANKERS.map((r) => `<span><i style="background:${r.color}"></i>${r.label}</span>`).join("")}</div>
-    <div class="vgroups">${cuts.map((c) => `<div class="vgroup"><p>Top ${fmt(c)} bugs to fix</p>${RANKERS.map((r) => `
-      <div class="hbar" title="${r.label}: ${v[r.key][c]} of the top ${c} are known exploited">
-        <span class="hbar-track"><span class="hbar-fill" style="width:${Math.max((v[r.key][c] / top) * 100, 0.8)}%;background:${r.color}"></span></span>
-        <b>${v[r.key][c]}</b></div>`).join("")}</div>`).join("")}</div>
-    <p class="headline">In the top 500, our score finds <b>${v.fix_first["500"]}</b> really exploited bugs:
-      <b>${(v.fix_first["500"] / v.random["500"]).toFixed(1)}×</b> random and <b>${(v.fix_first["500"] / v.cvss_only["500"]).toFixed(1)}×</b> CVSS alone.</p>`;
-}
-
 function render(d) {
   document.getElementById("ins-eyebrow").textContent = `Insights · CVEs published ${d.years}`;
   document.getElementById("ins-title").textContent = `What ${fmt(d.nodes.CVE)} vulnerabilities tell us`;
@@ -101,11 +83,7 @@ function render(d) {
       ${panel(5, "What attackers can reach", "CVEs whose attack paths lead to each ATT&CK tactic (the attacker's goal).",
         hbars(d.tactics.map((t) => ({ label: t.tactic.replace(/-/g, " "), value: t.n }))),
         `Shows defenders which goals, like stealing logins or hiding, most ${d.years} bugs open the door to.`)}
-      ${panel(6, "Fix-first: which bugs to patch first", `Our score ranks all ${fmt(d.validation.scored_cves)} scored CVEs. Then we checked it against CISA's list of bugs attackers really used.`,
-        `<div class="formula"><span><b>How bad</b>CVSS base score ÷ 10</span><i>×</i><span><b>How easy</b>exploitability ÷ 3.9</span><i>×</i>
-         <span><b>How far</b>0.5 + 0.5 × reachable techniques ÷ 10</span><i>=</i><span class="result"><b>Fix-first</b>0 to 100</span></div>${validation(d.validation)}`,
-        "It is tested on real attacks, not just a formula: ranking by our score puts more really exploited bugs at the top than CVSS alone.", true)}
-      ${panel(7, "Real attacks in our graph", `${d.validation.kev_in_data} of our ${d.years} CVEs are on CISA's exploited list, ${d.validation.ransomware_in_data} of them used by ransomware. Here are the highest ranked, with their position in our Fix-first order.`,
+      ${panel(6, "Real attacks in our graph", `${d.validation.kev_in_data} of our ${d.years} CVEs are on CISA's exploited list, ${d.validation.ransomware_in_data} of them used by ransomware. Here are the most severe ones, with their rank by our Fix-first score.`,
         `<div class="table-scroll"><table class="compare"><thead><tr><th>Rank</th><th>CVE</th><th>Product</th><th>Fix-first</th><th>Ransomware</th></tr></thead><tbody>
          ${d.exploited.map((r) => `<tr><td class="mono">#${fmt(r.rank)}</td>
            <td><a href="https://nvd.nist.gov/vuln/detail/${r.id}" target="_blank" rel="noreferrer" class="mono">${r.id}</a></td>

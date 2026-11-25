@@ -18,7 +18,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 32 32" width="26" height="26" aria-
 </svg>`;
 
 const PAGES = [["ask", "index.html", "Ask"], ["history", "history.html", "History"],
-               ["insights", "insights.html", "Insights"], ["research", "research.html", "Research"]];
+               ["insights", "insights.html", "Insights"]];
 
 // Fills <nav id="nav" data-page="..."> with the logo and the page links
 export function renderNav() {

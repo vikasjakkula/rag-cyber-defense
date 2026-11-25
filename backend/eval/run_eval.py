@@ -1,7 +1,7 @@
 """Score GraphRAG against the same LLM with no graph, on data/eval/benchmark.json.
 
 Run from backend/:  python -m eval.run_eval [max_questions]
-Writes data/eval/results.json and a copy for the web app's Research page.
+Writes data/eval/results.json.
 
 Both systems use the same model, so any difference comes from the graph:
   graphrag   our pipeline: Neo4j facts + the answer prompt
@@ -23,7 +23,7 @@ from rag.grounding import ID, normalize
 
 ROOT = Path(__file__).resolve().parents[2]
 BENCHMARK = ROOT / "data" / "eval" / "benchmark.json"
-OUTPUTS = [ROOT / "data" / "eval" / "results.json", ROOT / "frontend" / "data" / "eval-results.json"]
+OUTPUTS = [ROOT / "data" / "eval" / "results.json"]
 
 PLAIN_PROMPT = """You are a cybersecurity expert. Answer the question in 1 to 3 short sentences.
 Include the exact IDs (CVE, CWE, CAPEC, ATT&CK) and numbers you are asked for."""
