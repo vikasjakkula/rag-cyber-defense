@@ -214,7 +214,8 @@ def update_once():
     cve_n = update_cves(since)
     print(f"NVD: {cve_n} CVEs added or updated")
 
-    driver.execute_query(METRICS)
+    with driver.session() as session:  # IN TRANSACTIONS needs an auto-commit session
+        session.run(METRICS).consume()
     subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "embed_nodes.py")], check=True)
 
     totals = query("MATCH (c:CVE) RETURN count(c) AS cves")[0]
