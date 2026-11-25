@@ -216,7 +216,7 @@ $("ask").addEventListener("submit", (e) => { e.preventDefault(); ask($("q").valu
 // "Data updated ..." line: when the auto-updater last pulled new CVEs from NVD and MITRE
 fetch(`${window.API_URL}/meta`).then((r) => (r.ok ? r.json() : null)).then((m) => {
   if (!m) return;
-  const when = m.last_update ? new Date(m.last_update).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
+  const when = m.last_update ? new Date(m.last_update.replace(/[.*]$/, "")).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
   $("freshness").textContent = `${Number(m.cves).toLocaleString("en-US")} CVEs` + (when ? ` · data updated ${when}` : " · 2024 baseline");
   $("freshness").hidden = false;
 }).catch(() => {});
