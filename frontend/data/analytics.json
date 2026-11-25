@@ -1,193 +1,282 @@
 {
-  "built_at": "2026-11-11 11:30",
-  "kev_version": "2026.11.10",
+  "built_at": "2026-11-25 16:34",
+  "kev_version": "2026.11.25",
+  "years": "2024\u20132026",
   "nodes": {
-    "CVE": 38461,
-    "CWE": 944,
+    "CVE": 192232,
+    "CWE": 959,
     "CAPEC": 559,
-    "ATTACK": 697
+    "ATTACK": 706
   },
-  "links": 44045,
+  "links": 211565,
   "funnel": {
-    "all": 38461,
-    "cwe": 36716,
-    "capec": 30100,
-    "attack": 10349
+    "all": 192232,
+    "cwe": 180137,
+    "capec": 143952,
+    "attack": 62803
   },
   "severity": [
     {
       "severity": "MEDIUM",
-      "n": 19089
+      "n": 83543
     },
     {
       "severity": "CRITICAL",
-      "n": 4939
+      "n": 23472
     },
     {
       "severity": "HIGH",
-      "n": 13596
+      "n": 74694
     },
     {
       "severity": "LOW",
-      "n": 832
+      "n": 6099
     },
     {
       "severity": "NONE",
-      "n": 5
+      "n": 4424
     }
   ],
   "monthly": [
     {
       "month": "2024-01",
-      "n": 1130
+      "n": 2594
     },
     {
       "month": "2024-02",
-      "n": 1734
+      "n": 2778
     },
     {
       "month": "2024-03",
-      "n": 2613
+      "n": 3309
     },
     {
       "month": "2024-04",
-      "n": 3133
+      "n": 3621
     },
     {
       "month": "2024-05",
-      "n": 3323
+      "n": 4999
     },
     {
       "month": "2024-06",
-      "n": 2684
+      "n": 3078
     },
     {
       "month": "2024-07",
-      "n": 2858
+      "n": 3113
     },
     {
       "month": "2024-08",
-      "n": 2681
+      "n": 2896
     },
     {
       "month": "2024-09",
-      "n": 2394
+      "n": 2514
     },
     {
       "month": "2024-10",
-      "n": 3350
+      "n": 3564
     },
     {
       "month": "2024-11",
-      "n": 3750
+      "n": 4056
     },
     {
       "month": "2024-12",
-      "n": 3010
+      "n": 3431
+    },
+    {
+      "month": "2025-01",
+      "n": 4275
+    },
+    {
+      "month": "2025-02",
+      "n": 3673
+    },
+    {
+      "month": "2025-03",
+      "n": 3998
+    },
+    {
+      "month": "2025-04",
+      "n": 4034
+    },
+    {
+      "month": "2025-05",
+      "n": 3980
+    },
+    {
+      "month": "2025-06",
+      "n": 3681
+    },
+    {
+      "month": "2025-07",
+      "n": 3776
+    },
+    {
+      "month": "2025-08",
+      "n": 3628
+    },
+    {
+      "month": "2025-09",
+      "n": 4321
+    },
+    {
+      "month": "2025-10",
+      "n": 4273
+    },
+    {
+      "month": "2025-11",
+      "n": 3020
+    },
+    {
+      "month": "2025-12",
+      "n": 5491
+    },
+    {
+      "month": "2026-01",
+      "n": 4302
+    },
+    {
+      "month": "2026-02",
+      "n": 4616
+    },
+    {
+      "month": "2026-03",
+      "n": 6234
+    },
+    {
+      "month": "2026-04",
+      "n": 5810
+    },
+    {
+      "month": "2026-05",
+      "n": 6936
+    },
+    {
+      "month": "2026-06",
+      "n": 7942
+    },
+    {
+      "month": "2026-07",
+      "n": 9771
+    },
+    {
+      "month": "2026-08",
+      "n": 12255
+    },
+    {
+      "month": "2026-09",
+      "n": 14927
+    },
+    {
+      "month": "2026-10",
+      "n": 17051
     }
   ],
   "top_cwes": [
     {
       "id": "CWE-79",
-      "name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
-      "n": 7929,
-      "avg_score": 5.8
+      "name": "Improper Neutralization of Input During Web Page Generation",
+      "n": 24933,
+      "avg_score": 6.0
     },
     {
       "id": "CWE-89",
-      "name": "Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')",
-      "n": 2813,
-      "avg_score": 8.5
+      "name": "Improper Neutralization of Special Elements used in an SQL Command",
+      "n": 11073,
+      "avg_score": 8.3
     },
     {
       "id": "CWE-862",
       "name": "Missing Authorization",
-      "n": 1578,
-      "avg_score": 6.2
+      "n": 10190,
+      "avg_score": 6.1
     },
     {
-      "id": "CWE-787",
-      "name": "Out-of-bounds Write",
-      "n": 1550,
-      "avg_score": 7.9
-    },
-    {
-      "id": "CWE-352",
-      "name": "Cross-Site Request Forgery (CSRF)",
-      "n": 1498,
-      "avg_score": 6.4
-    },
-    {
-      "id": "CWE-22",
-      "name": "Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal')",
-      "n": 1039,
-      "avg_score": 7.4
-    },
-    {
-      "id": "CWE-125",
-      "name": "Out-of-bounds Read",
-      "n": 995,
-      "avg_score": 6.6
+      "id": "CWE-284",
+      "name": "Improper Access Control",
+      "n": 7071,
+      "avg_score": 7.1
     },
     {
       "id": "CWE-416",
       "name": "Use After Free",
-      "n": 941,
+      "n": 6207,
       "avg_score": 7.7
     },
     {
-      "id": "CWE-476",
-      "name": "NULL Pointer Dereference",
-      "n": 890,
-      "avg_score": 5.8
+      "id": "CWE-787",
+      "name": "Out-of-bounds Write",
+      "n": 5739,
+      "avg_score": 7.8
     },
     {
-      "id": "CWE-94",
-      "name": "Improper Control of Generation of Code ('Code Injection')",
-      "n": 864,
-      "avg_score": 8.0
+      "id": "CWE-22",
+      "name": "Improper Limitation of a Pathname to a Restricted Directory",
+      "n": 5621,
+      "avg_score": 7.2
+    },
+    {
+      "id": "CWE-125",
+      "name": "Out-of-bounds Read",
+      "n": 5160,
+      "avg_score": 6.6
+    },
+    {
+      "id": "CWE-74",
+      "name": "Improper Neutralization of Special Elements in Output Used by a Downstream Component",
+      "n": 4914,
+      "avg_score": 8.3
+    },
+    {
+      "id": "CWE-352",
+      "name": "Cross-Site Request Forgery",
+      "n": 4660,
+      "avg_score": 6.2
     }
   ],
   "tactics": [
     {
       "tactic": "stealth",
-      "n": 8300
+      "n": 50924
     },
     {
       "tactic": "credential-access",
-      "n": 5688
+      "n": 36410
     },
     {
       "tactic": "execution",
-      "n": 4603
+      "n": 29017
     },
     {
       "tactic": "persistence",
-      "n": 3581
+      "n": 24836
     },
     {
       "tactic": "defense-impairment",
-      "n": 3535
+      "n": 24015
     },
     {
       "tactic": "privilege-escalation",
-      "n": 3503
+      "n": 23477
     },
     {
       "tactic": "lateral-movement",
-      "n": 2591
+      "n": 18338
     },
     {
       "tactic": "discovery",
-      "n": 2178
+      "n": 12303
     },
     {
       "tactic": "impact",
-      "n": 1335
+      "n": 8760
     },
     {
       "tactic": "collection",
-      "n": 1318
+      "n": 8412
     }
   ],
   "fix_first": [
@@ -205,182 +294,182 @@
       "vendor": null
     },
     {
-      "id": "CVE-2024-0242",
-      "name": "Under certain circumstances IQ Panel4 and IQ4 Hub panel software prior to version 4.4.2 could allow unauthoriz",
+      "id": "CVE-2025-22612",
+      "name": "Coolify is an open-source and self-hostable tool for managing servers, applications, and databases. Prior to v",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 25,
-      "score": 98.0,
+      "reach": 28,
+      "score": 100.0,
       "kev": false,
       "rank": 2,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0412",
-      "name": "A vulnerability was found in DeShang DSShop up to 3.1.0. It has been declared as problematic. This vulnerabili",
+      "id": "CVE-2025-29270",
+      "name": "Incorrect access control in the realtime.cgi endpoint of Deep Sea Electronics devices DSE855 v1.1.0 to v1.1.26",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 19,
-      "score": 98.0,
+      "reach": 44,
+      "score": 100.0,
       "kev": false,
       "rank": 3,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0413",
-      "name": "A vulnerability was found in DeShang DSKMS up to 3.1.2. It has been rated as problematic. This issue affects s",
+      "id": "CVE-2025-41240",
+      "name": "Three Bitnami Helm charts mount Kubernetes Secrets under a predictable path (/opt/bitnami/*/secrets) that is l",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 19,
-      "score": 98.0,
+      "reach": 11,
+      "score": 100.0,
       "kev": false,
       "rank": 4,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0414",
-      "name": "A vulnerability classified as problematic has been found in DeShang DSCMS up to 3.1.2/7.1. Affected is an unkn",
+      "id": "CVE-2025-49752",
+      "name": "Azure Bastion Elevation of Privilege Vulnerability",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 19,
-      "score": 98.0,
+      "reach": 11,
+      "score": 100.0,
       "kev": false,
       "rank": 5,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0415",
-      "name": "A vulnerability classified as critical was found in DeShang DSMall up to 6.1.0. Affected by this vulnerability",
+      "id": "CVE-2025-53624",
+      "name": "The Docusaurus gists plugin adds a page to your Docusaurus instance, displaying all public gists of a GitHub u",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 19,
-      "score": 98.0,
+      "reach": 25,
+      "score": 100.0,
       "kev": false,
       "rank": 6,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0642",
-      "name": "Inadequate access control in the C21 Live Encoder and Live Mosaic product, version 5.3. This vulnerability all",
+      "id": "CVE-2025-54339",
+      "name": "An Incorrect Access Control vulnerability was found in the Application Server of Desktop Alert PingAlert versi",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
       "reach": 19,
-      "score": 98.0,
+      "score": 100.0,
       "kev": false,
       "rank": 7,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0712",
-      "name": "A vulnerability was found in Byzoro Smart S150 Management Platform V31R02B15. It has been classified as critic",
+      "id": "CVE-2025-61481",
+      "name": "An issue in MikroTik RouterOS v.7.14.2 and SwOS v.2.18 exposes the WebFig management interface over cleartext ",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 19,
-      "score": 98.0,
+      "reach": 30,
+      "score": 100.0,
       "kev": false,
       "rank": 8,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-0949",
-      "name": "Missing Authentication, Files or Directories Accessible to External Parties, Use of Hard-coded Credentials vul",
+      "id": "CVE-2025-63216",
+      "name": "The Itel DAB Gateway (IDGat build c041640a) is vulnerable to Authentication Bypass due to improper JWT validat",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 12,
-      "score": 98.0,
+      "reach": 15,
+      "score": 100.0,
       "kev": false,
       "rank": 9,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-10124",
-      "name": "The Vayu Blocks \u2013 Gutenberg Blocks for WordPress & WooCommerce plugin for WordPress is vulnerable to unauthori",
+      "id": "CVE-2025-63224",
+      "name": "The Itel DAB Encoder (IDEnc build 25aec8d) is vulnerable to Authentication Bypass due to improper JWT validati",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 19,
-      "score": 98.0,
+      "reach": 15,
+      "score": 100.0,
       "kev": false,
       "rank": 10,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-1039",
-      "name": "Gessler GmbH WEB-MASTER has a restoration account that uses weak hard coded credentials and if exploited could",
+      "id": "CVE-2026-0881",
+      "name": "Sandbox escape in the Messaging System component. This vulnerability was fixed in Firefox 147 and Thunderbird ",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 10,
-      "score": 98.0,
+      "reach": 25,
+      "score": 100.0,
       "kev": false,
       "rank": 11,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-10764",
-      "name": "A vulnerability classified as critical has been found in Codezips Online Institute Management System 1.0. This",
+      "id": "CVE-2026-101809",
+      "name": "Vulnerability in the Workflow product of Oracle E-Business Suite (component: Workflow Notification Mailer). Su",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 20,
-      "score": 98.0,
+      "reach": 19,
+      "score": 100.0,
       "kev": false,
       "rank": 12,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-10765",
-      "name": "A vulnerability classified as critical was found in Codezips Online Institute Management System up to 1.0. Thi",
+      "id": "CVE-2026-105284",
+      "name": "A weakness has been identified in Totolink A3002MU 1.0.0-B20230403.1455. The impacted element is the function ",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 20,
-      "score": 98.0,
+      "reach": 11,
+      "score": 100.0,
       "kev": false,
       "rank": 13,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-10766",
-      "name": "A vulnerability, which was classified as critical, has been found in Codezips Free Exam Hall Seating Managemen",
+      "id": "CVE-2026-111057",
+      "name": "Mercury is a Python framework for sharing Jupyter notebooks as web applications and dashboards. From 3.0.0 unt",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 20,
-      "score": 98.0,
+      "reach": 19,
+      "score": 100.0,
       "kev": false,
       "rank": 14,
       "ransomware": false,
       "vendor": null
     },
     {
-      "id": "CVE-2024-11054",
-      "name": "A vulnerability classified as critical was found in SourceCodester Simple Music Cloud Community System 1.0. Th",
+      "id": "CVE-2026-120338",
+      "name": "Prefab UI's Generative UI sandbox runs caller-supplied Python inside Pyodide, Python compiled to WebAssembly, ",
       "severity": "CRITICAL",
-      "base": 9.8,
+      "base": 10.0,
       "expl": 3.9,
-      "reach": 20,
-      "score": 98.0,
+      "reach": 10,
+      "score": 100.0,
       "kev": false,
       "rank": 15,
       "ransomware": false,
@@ -388,6 +477,32 @@
     }
   ],
   "exploited": [
+    {
+      "id": "CVE-2026-21962",
+      "name": "Oracle HTTP Server and Oracle Weblogic Server Proxy Plug-in Improper Access Control Vulnerability",
+      "severity": "CRITICAL",
+      "base": 10.0,
+      "expl": 3.9,
+      "reach": 19,
+      "score": 100.0,
+      "kev": true,
+      "rank": 20,
+      "ransomware": false,
+      "vendor": "Oracle HTTP Server and Oracle Weblogic Server Proxy Plug-in"
+    },
+    {
+      "id": "CVE-2026-34908",
+      "name": "Ubiquiti UniFi OS Improper Access Control Vulnerability",
+      "severity": "CRITICAL",
+      "base": 10.0,
+      "expl": 3.9,
+      "reach": 19,
+      "score": 100.0,
+      "kev": true,
+      "rank": 29,
+      "ransomware": false,
+      "vendor": "Ubiquiti UniFi OS"
+    },
     {
       "id": "CVE-2024-27348",
       "name": "Apache HugeGraph-Server Improper Access Control Vulnerability",
@@ -397,7 +512,7 @@
       "reach": 19,
       "score": 98.0,
       "kev": true,
-      "rank": 50,
+      "rank": 158,
       "ransomware": false,
       "vendor": "Apache HugeGraph-Server"
     },
@@ -410,113 +525,87 @@
       "reach": 19,
       "score": 98.0,
       "kev": true,
-      "rank": 84,
+      "rank": 193,
       "ransomware": true,
       "vendor": "SonicWall SonicOS"
     },
     {
-      "id": "CVE-2024-21410",
-      "name": "Microsoft Exchange Server Privilege Escalation Vulnerability",
+      "id": "CVE-2025-24989",
+      "name": "Microsoft Power Pages Improper Access Control Vulnerability",
       "severity": "CRITICAL",
       "base": 9.8,
       "expl": 3.9,
-      "reach": 8,
-      "score": 88.2,
+      "reach": 19,
+      "score": 98.0,
       "kev": true,
-      "rank": 199,
+      "rank": 320,
       "ransomware": false,
-      "vendor": "Microsoft Exchange Server"
+      "vendor": "Microsoft Power Pages"
     },
     {
-      "id": "CVE-2024-4358",
-      "name": "Progress Telerik Report Server Authentication Bypass by Spoofing Vulnerability",
+      "id": "CVE-2026-102895",
+      "name": "GPUStack Improper Authentication Vulnerability",
       "severity": "CRITICAL",
       "base": 9.8,
       "expl": 3.9,
-      "reach": 8,
-      "score": 88.2,
+      "reach": 16,
+      "score": 98.0,
       "kev": true,
-      "rank": 240,
+      "rank": 527,
       "ransomware": false,
-      "vendor": "Progress Telerik Report Server"
+      "vendor": "GPUStack GPUStack"
     },
     {
-      "id": "CVE-2024-53704",
-      "name": "SonicWall SonicOS SSLVPN Improper Authentication Vulnerability",
+      "id": "CVE-2026-35616",
+      "name": "Fortinet FortiClient EMS Improper Access Control Vulnerability",
       "severity": "CRITICAL",
       "base": 9.8,
       "expl": 3.9,
-      "reach": 8,
-      "score": 88.2,
+      "reach": 19,
+      "score": 98.0,
       "kev": true,
-      "rank": 255,
-      "ransomware": true,
-      "vendor": "SonicWall SonicOS"
-    },
-    {
-      "id": "CVE-2024-54085",
-      "name": "AMI MegaRAC SPx Authentication Bypass by Spoofing Vulnerability",
-      "severity": "CRITICAL",
-      "base": 9.8,
-      "expl": 3.9,
-      "reach": 8,
-      "score": 88.2,
-      "kev": true,
-      "rank": 256,
+      "rank": 618,
       "ransomware": false,
-      "vendor": "AMI MegaRAC SPx"
+      "vendor": "Fortinet FortiClient EMS"
     },
     {
-      "id": "CVE-2024-7593",
-      "name": "Ivanti Virtual Traffic Manager Authentication Bypass Vulnerability",
+      "id": "CVE-2026-48907",
+      "name": "Widget Factory Joomla Content Editor Improper Access Control Vulnerability",
       "severity": "CRITICAL",
       "base": 9.8,
       "expl": 3.9,
-      "reach": 8,
-      "score": 88.2,
+      "reach": 19,
+      "score": 98.0,
       "kev": true,
-      "rank": 267,
+      "rank": 675,
       "ransomware": false,
-      "vendor": "Ivanti Virtual Traffic Manager"
-    },
-    {
-      "id": "CVE-2024-24919",
-      "name": "Check Point Quantum Security Gateways Information Disclosure Vulnerability",
-      "severity": "HIGH",
-      "base": 8.6,
-      "expl": 3.9,
-      "reach": 25,
-      "score": 86.0,
-      "kev": true,
-      "rank": 281,
-      "ransomware": true,
-      "vendor": "Check Point Quantum Security Gateways"
+      "vendor": "Widget Factory Joomla Content Editor"
     }
   ],
   "validation": {
-    "scored_cves": 38002,
-    "kev_in_data": 165,
+    "scored_cves": 178171,
+    "kev_in_data": 589,
     "fix_first": {
-      "50": 1,
+      "50": 2,
       "100": 2,
       "250": 4,
-      "500": 11,
-      "1000": 15
+      "500": 5,
+      "1000": 8
     },
     "cvss_only": {
-      "50": 2,
+      "50": 1,
       "100": 3,
-      "250": 5,
-      "500": 6,
-      "1000": 14
+      "250": 15,
+      "500": 27,
+      "1000": 41
     },
     "random": {
       "50": 0.2,
-      "100": 0.4,
-      "250": 1.1,
-      "500": 2.2,
-      "1000": 4.3
+      "100": 0.3,
+      "250": 0.8,
+      "500": 1.7,
+      "1000": 3.3
     },
-    "ransomware_in_data": 39
+    "ransomware_in_data": 85
   }
 }

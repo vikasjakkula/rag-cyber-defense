@@ -65,7 +65,7 @@ function render(report) {
         <li>${report.questions} questions is a pilot; the plan is 150 across more question types.</li>
         <li>The no-ID questions reuse the first sentence of a CAPEC description, so they are easier than real user wording.</li>
         <li>Answer times include waits for the free Groq rate limit (this run used Groq; the app now uses Gemini).</li>
-        <li>Data covers CVEs published in 2024 only.</li>
+        <li>The test ran on the 2024 graph; the live graph now covers 2024–2026 and updates daily.</li>
       </ul>
       <p class="note">Run on ${escapeHtml(report.run_at)} · ${escapeHtml(report.model)} · reasoning effort ${escapeHtml(report.reasoning_effort)}</p>
     </section>`;

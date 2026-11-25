@@ -35,7 +35,7 @@ def kev():
 
 def overview():
     labels = {r["label"]: r["n"] for r in run(
-        "MATCH (n) RETURN labels(n)[0] AS label, count(*) AS n")}
+        "MATCH (n) WHERE NOT n:Meta RETURN labels(n)[0] AS label, count(*) AS n")}
     links = run("MATCH ()-[r]->() RETURN count(r) AS n")[0]["n"]
     funnel = run("""
         MATCH (c:CVE)
@@ -58,7 +58,7 @@ def charts():
     tactics = run("""MATCH (c:CVE)-[:CVE_CWE]->(:CWE)-[:CWE_CAPEC]->(:CAPEC)-[:CAPEC_ATTACK]->(t:ATTACK)
                      UNWIND t.category AS tactic
                      RETURN tactic, count(DISTINCT c) AS n ORDER BY n DESC LIMIT 10""")
-    return severity, [m for m in monthly if m["month"].startswith("2024")], top_cwes, tactics
+    return severity, [m for m in monthly if "2024" <= m["month"] < time.strftime("%Y-%m")], top_cwes, tactics
 
 
 def fix_first(kev_ids):
@@ -98,15 +98,18 @@ def main():
     labels, links, funnel = overview()
     severity, monthly, top_cwes, tactics = charts()
     top, exploited, validation = fix_first(set(kev_map))
+    all_kev = [r["id"] for r in run("MATCH (c:CVE) WHERE c.id IN $ids RETURN c.id AS id", ids=list(kev_map))]
+    years = run("MATCH (c:CVE) WHERE c.published IS NOT NULL RETURN min(c.published.year) AS a, max(c.published.year) AS b")[0]
     for r in top + exploited:
         entry = kev_map.get(r["id"])
         r["ransomware"] = bool(entry and entry.get("knownRansomwareCampaignUse") == "Known")
         r["vendor"] = f'{entry["vendorProject"]} {entry["product"]}' if entry else None
     validation["ransomware_in_data"] = sum(
-        1 for cve, v in kev_map.items() if cve.startswith("CVE-2024-") and v.get("knownRansomwareCampaignUse") == "Known")
+        1 for r in all_kev if kev_map[r].get("knownRansomwareCampaignUse") == "Known")
     report = {
         "built_at": time.strftime("%Y-%m-%d %H:%M"),
         "kev_version": version,
+        "years": f"{years['a']}" if years["a"] == years["b"] else f"{years['a']}–{years['b']}",
         "nodes": labels,
         "links": links,
         "funnel": funnel,
