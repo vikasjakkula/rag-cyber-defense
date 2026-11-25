@@ -38,7 +38,7 @@ function createReply(question) {
     <span class="badge" hidden></span><details class="cypher" hidden><summary>Cypher</summary><pre></pre></details>
     <div class="answer"><div class="skeleton"><span></span><span></span></div></div>
     <p class="grounding" hidden></p><div class="graphs"></div>
-    <div class="details" hidden><h2>Technical explanation</h2><div class="details-text"></div></div>
+    <details class="details" hidden><summary><h2>Technical explanation</h2></summary><div class="details-text"></div></details>
     <p class="note missing" hidden></p><details class="sources" hidden></details>`;
   $("thread").appendChild(el);
   el.scrollIntoView({ behavior: "smooth", block: "start" });
