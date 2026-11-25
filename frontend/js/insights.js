@@ -90,6 +90,9 @@ function render(d) {
            <td>${escapeHtml(r.vendor)}</td><td><span class="meter"><i style="width:${r.score}%"></i></span>${r.score}</td>
            <td>${r.ransomware ? '<span class="tag danger">Used by ransomware</span>' : '<span class="tag">No known use</span>'}</td></tr>`).join("")}
          </tbody></table></div>`, "", true)}
+      ${panel(7, "Our answers vs ChatGPT", "Same question in the ChatGPT app and on our site: real screenshots.",
+        `<img src="img/chatgpt-vs-ours.jpg" alt="ChatGPT and Cyber Defense RAG both find CWE-89 for CVE-2024-8868; ours also gives the severity, a Verified check, 6 attack patterns and the exact query" class="compare-img">`,
+        "Both get the weakness right, but only ours checks its own answer and shows the full attack path behind it.", true)}
     </div>
     <p class="note">Built ${escapeHtml(d.built_at)} from Neo4j and CISA KEV catalog ${escapeHtml(d.kev_version)}.</p>`;
   document.querySelectorAll(".trend").forEach(hookTrend);
